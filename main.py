@@ -1,4 +1,5 @@
 # Diogo Andrade 89265 MEI
+# Pedro Oliveira 89156 MEI
 
 import argparse
 import logging
@@ -6,6 +7,8 @@ import csv
 import re
 import time
 import sys
+from Tokenizer import SimpleTokenizer, ImprovedTokenizer
+from Indexer import Indexer
 
 
 logging.basicConfig(
@@ -66,37 +69,27 @@ def tokenizing(data):
         document_id += 1
     return tokens
 
-
-def indexing(tokens):
-    indexs = {}
-    # sort first by token and then by document Id
-    tokens.sort(key = lambda x: (x[0], x[1]))
-    for t in tokens:
-        token = t[0]
-        document = t[1]
-        if token not in indexs:
-            indexs[token] = set()
-        indexs[token].add(document)
-    return indexs
-
-
-def main():
+def main(file, tokenizing):
     try:
-        with open(args.filename, 'r') as file_data:
-            data = csv.reader(file_data, delimiter=',')
 
-            # start tokenizing
-            start_time = time.time()
-            tokens = tokenizing(data)
-            logger.info("Tokenizing Time: %s seconds" % (time.time() - start_time))
+        # start tokenizing
+        start_time = time.time()
+        tokenizer = None
+        if tokenizing:
+            tokenizer = SimpleTokenizer(file)
+        else:
+            tokenizer = ImprovedTokenizer(file)
+        tokenizer.tokenize()
+        logger.info("Tokenizing Time: %s seconds" % (time.time() - start_time))
 
-            # start indexing
-            start_time = time.time()
-            indexs = indexing(tokens)
-            logger.info("Indexing Time: %s seconds" % (time.time() - start_time))
+        # start indexing
+        start_time = time.time()
+        indexs = Indexer(tokenizer)
+        indexs.indexing()
+        logger.info("Indexing Time: %s seconds" % (time.time() - start_time))
 
-            # assignment questions
-            questions(indexs)
+        # assignment questions
+        #questions(indexs)
     except FileNotFoundError as e:
         logger.warn("File not found!")
 
@@ -107,4 +100,4 @@ if __name__ == "__main__":
     parser.add_argument("-t", dest="tokenizing", required=False, help="Use improved tokenizer", default=False, action='store_true')
     args = parser.parse_args()
 
-    main()
+    main(args.filename, args.tokenizing)
