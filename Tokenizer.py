@@ -19,7 +19,6 @@ class SimpleTokenizer(Tokenizer):
 	def __init__(self, file):
 		self._corpus = CorpusReader(file)
 		self._tokens = []
-		self._index = []
 
 	@property
 	def tokens(self):

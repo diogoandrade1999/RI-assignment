@@ -9,9 +9,7 @@ class CorpusReader:
 		proc_dict = {}
 		with open(self._path, "r") as filereader:
 			filereader.readline()
-			counter_id = 0
-			for line in reader(filereader):
+			for doc_id, line in enumerate(reader(filereader)):
 				if line[2] != "" and line[7] != "":
-					proc_dict[counter_id] = (line[2], line[7])
-					counter_id += 1
+					proc_dict[doc_id] = (line[2], line[7])
 		return proc_dict
