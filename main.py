@@ -3,8 +3,6 @@
 
 import argparse
 import logging
-import csv
-import re
 import time
 import sys
 from Tokenizer import SimpleTokenizer, ImprovedTokenizer
@@ -19,13 +17,13 @@ logger = logging.getLogger("main")
 
 
 def questions(indexs):
-    logger.info("Collection memory size: %s bytes" % sys.getsizeof(indexs))
+    logger.info("Collection memory size: %s bytes" % sys.getsizeof(indexs.index))
 
-    logger.info("Vocabulary size: %s tokens" % len(indexs))
+    logger.info("Vocabulary size: %s tokens" % len(indexs.index))
 
     data = []
-    for token in indexs:
-        if len(indexs[token]) == 1:
+    for token, docs_id in indexs.index.items():
+        if len(docs_id) == 1:
             data += [token]
         # only want first ten
         if len(data) == 10:
@@ -33,49 +31,15 @@ def questions(indexs):
 
     logger.info('List the ten first terms (in alphabetic order) that appear in only one document:\n%s' % str(data))
 
-    data = [k for k, v in sorted(indexs.items(), key = lambda x: len(x[1]))[-10:]]
+    data = [k for k, v in sorted(indexs.index.items(), key = lambda x: len(x[1]))[-10:]]
     logger.info('List the ten terms with highest document frequency:\n%s' % str(data))
 
 
-def simple_tokenizer(token, document):
-    # replaces all non-alphabetic characters by a space
-    token = re.sub('[^a-zA-Z]+', ' ', token)
-    # put token in lowercase
-    token = token.lower()
-    # splits on whitespace
-    tokens = token.split(' ')
-    # ignores all tokens with less than 3 characters
-    tokens = [(token, document) for token in tokens if len(token) >= 3]
-    return tokens
-
-
-def improved_tokenizer(token, document):
-    pass
-
-
-def tokenizing(data):
-    tokens = []
-    document_id = 0
-    for document in data:
-        # Ignore header
-        if document_id != 0:
-            if document[7] != '':
-                if not args.tokenizing:
-                    tokens += simple_tokenizer(document[2], document_id)
-                    tokens += simple_tokenizer(document[7], document_id)
-                else:
-                    tokens += improved_tokenizer(document[2], document_id)
-                    tokens += improved_tokenizer(document[7], document_id)
-        document_id += 1
-    return tokens
-
 def main(file, tokenizing):
     try:
-
         # start tokenizing
         start_time = time.time()
-        tokenizer = None
-        if tokenizing:
+        if not tokenizing:
             tokenizer = SimpleTokenizer(file)
         else:
             tokenizer = ImprovedTokenizer(file)
@@ -89,9 +53,9 @@ def main(file, tokenizing):
         logger.info("Indexing Time: %s seconds" % (time.time() - start_time))
 
         # assignment questions
-        #questions(indexs)
+        questions(indexs)
     except FileNotFoundError as e:
-        logger.warn("File not found!")
+        logger.warning("File not found!")
 
 
 if __name__ == "__main__":

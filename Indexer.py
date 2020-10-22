@@ -1,12 +1,17 @@
+
 class Indexer:
 	def __init__(self, tokenizer):
-		self.tokenizer = tokenizer
-		self.index = {}
+		self._tokenizer = tokenizer
+		self._index = {}
+
+	@property
+	def index(self):
+		return self._index
 
 	def indexing(self):
 		# sort first by token and then by document Id
-		self.tokenizer.tokens.sort(key=lambda x: (x[0], x[1]))
-		for token, doc_id in self.tokenizer.tokens:
-			if token not in self.index:
-				self.index[token] = set()
-			self.index[token].add(doc_id)
+		self._tokenizer.tokens.sort(key=lambda x: (x[0], x[1]))
+		for token, doc_id in self._tokenizer.tokens:
+			if token not in self._index:
+				self._index[token] = set()
+			self._index[token].add(doc_id)
