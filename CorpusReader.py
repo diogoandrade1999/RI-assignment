@@ -11,5 +11,5 @@ class CorpusReader:
 			filereader.readline()
 			for doc_id, line in enumerate(reader(filereader)):
 				if line[2] != "" and line[7] != "":
-					proc_dict[doc_id] = (line[2], line[7])
+					proc_dict[doc_id] = line[2] + " " + line[7]
 		return proc_dict
