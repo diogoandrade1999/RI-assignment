@@ -29,13 +29,13 @@ class SimpleTokenizer(Tokenizer):
 
 	def tokenize(self):
 		processed_files = self._corpus.process()
-		for file_id, doc in processed_files.items():
+		for doc_id, data in processed_files.items():
 			# replaces all non-alphabetic characters by a space
-			tokens = re.sub('[^a-zA-Z]+', ' ', doc[0] + doc[1])
+			tokens = re.sub('[^a-zA-Z]+', ' ', data)
 			# put token in lowercase
 			tokens = tokens.lower()
 			# ignores all tokens with less than 3 characters
-			self._tokens += [(token, file_id) for token in tokens.split() if len(token) >= 3]
+			self._tokens += [(token, doc_id) for token in tokens.split() if len(token) >= 3]
 
 
 class ImprovedTokenizer(Tokenizer):
@@ -55,7 +55,7 @@ class ImprovedTokenizer(Tokenizer):
 		stime = time.time()
 		for file_id, doc in processed_files.items():
 			# replaces all non-alphabetic characters by a space
-			tokens = re.sub('[^a-zA-Z0-9\-/]+', ' ', doc[0] + " " + doc[1])
+			tokens = re.sub('[^a-zA-Z0-9\-/]+', ' ', doc)
 			# put token in lowercase
 			tokens = tokens.lower()
 			# ignores all tokens with less than 3 characters
