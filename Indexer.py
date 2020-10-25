@@ -15,3 +15,8 @@ class Indexer:
 			if token not in self._index:
 				self._index[token] = set()
 			self._index[token].add(doc_id)
+		i = 0
+		for token in self._index:
+			print(token, self._index[token])
+			i+=1
+			if i > 20: break

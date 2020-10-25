@@ -50,7 +50,7 @@ def main(file, tokenizing):
         start_time = time.time()
         indexs = Indexer(tokenizer)
         indexs.indexing()
-        logger.info("Indexing Time: %s seconds" % (time.time() - start_time))
+        logger.info("Indexing Time: %s seconds" % (time.time() - start_time))   
 
         # assignment questions
         questions(indexs)

@@ -1,8 +1,10 @@
 import abc
 import re
 from CorpusReader import CorpusReader
-from nltk.stem import PorterStemmer
+from nltk.stem.snowball import SnowballStemmer
 import json
+import time
+
 
 
 class Tokenizer(metaclass=abc.ABCMeta):
@@ -41,8 +43,8 @@ class ImprovedTokenizer(Tokenizer):
 		self._corpus = CorpusReader(file)
 		self._tokens = []
 		with open("stopwords.json", "r") as stop:
-			self._stopwords = json.load(stop)
-		self._stemmer = PorterStemmer()
+			self._stopwords = set(json.load(stop))
+		self._stemmer = SnowballStemmer("english")
 
 	@property
 	def tokens(self):
@@ -50,11 +52,13 @@ class ImprovedTokenizer(Tokenizer):
 
 	def tokenize(self):
 		processed_files = self._corpus.process()
+		stime = time.time()
 		for file_id, doc in processed_files.items():
 			# replaces all non-alphabetic characters by a space
-			tokens = re.sub('[^a-zA-Z]+', ' ', doc[0] + doc[1])
+			tokens = re.sub('[^a-zA-Z0-9\-/]+', ' ', doc[0] + " " + doc[1])
 			# put token in lowercase
 			tokens = tokens.lower()
 			# ignores all tokens with less than 3 characters
 			self._tokens += [(self._stemmer.stem(token), file_id)
-							 for token in tokens.split() if token not in self._stopwords]
+							 for token in list(set(tokens.split())) if token not in self._stopwords]
+		print("It took ", time.time() - stime)
