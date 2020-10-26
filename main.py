@@ -5,6 +5,7 @@ import argparse
 import logging
 import time
 import sys
+
 from Tokenizer import SimpleTokenizer, ImprovedTokenizer
 from Indexer import Indexer
 
@@ -16,7 +17,7 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 
-def questions(indexs):
+def questions(indexs:Indexer):
     logger.info("Collection memory size: %s bytes" % sys.getsizeof(indexs.index))
 
     logger.info("Vocabulary size: %s tokens" % len(indexs.index))
@@ -35,14 +36,14 @@ def questions(indexs):
     logger.info('List the ten terms with highest document frequency:\n%s' % str(data))
 
 
-def main(file, tokenizing):
+def main(file_name:str, tokenizing:bool):
     try:
         # start tokenizing
         start_time = time.time()
         if not tokenizing:
-            tokenizer = SimpleTokenizer(file)
+            tokenizer = SimpleTokenizer(file_name)
         else:
-            tokenizer = ImprovedTokenizer(file)
+            tokenizer = ImprovedTokenizer(file_name)
         tokenizer.tokenize()
         logger.info("Tokenizing Time: %s seconds" % (time.time() - start_time))
 
@@ -60,8 +61,8 @@ def main(file, tokenizing):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", dest="filename", required=True, help="Name of data file", metavar="FILE")
+    parser.add_argument("-f", dest="file_name", required=True, help="Name of data file")
     parser.add_argument("-t", dest="tokenizing", required=False, help="Use improved tokenizer", default=False, action='store_true')
     args = parser.parse_args()
 
-    main(args.filename, args.tokenizing)
+    main(args.file_name, args.tokenizing)
