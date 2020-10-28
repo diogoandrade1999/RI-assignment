@@ -9,7 +9,7 @@
 
 -   Tokenizing Time: 3.260822296142578 seconds
 
--   Indexing Time: 11.22474980354309 seconds
+-   Indexing Time: 6.789501905441284 seconds
 
 -   Collection memory size: 2621544 bytes
 

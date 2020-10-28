@@ -85,7 +85,8 @@ class SimpleTokenizer(Tokenizer):
 			# put token in lowercase
 			tokens = tokens.lower()
 			# ignores all tokens with less than 3 characters
-			self._tokens += [(token, doc_id) for token in tokens.split() if len(token) >= 3]
+			# ! remove duplicated tokens
+			self._tokens += [(token, doc_id) for token in set(tokens.split()) if len(token) >= 3]
 
 
 class ImprovedTokenizer(Tokenizer):
@@ -136,11 +137,12 @@ class ImprovedTokenizer(Tokenizer):
 	def tokenize(self) -> None:
 		"""Tokenize the data."""
 		processed_files = self._corpus.process()
-		for file_id, doc in processed_files.items():
+		for doc_id, data in processed_files.items():
 			# replaces all non-alphabetic or numeric or hyphen characters by a space
-			tokens = re.sub('[^a-zA-Z0-9\-/]+', ' ', doc)
+			tokens = re.sub('[^a-zA-Z0-9\-/]+', ' ', data)
 			# put token in lowercase
 			tokens = tokens.lower()
 			# use stemmer
-			self._tokens += [(self._stemmer.stem(token), file_id)
-							 for token in list(set(tokens.split())) if token not in self._stopwords]
+			# ! remove duplicated tokens
+			self._tokens += [(self._stemmer.stem(token), doc_id)
+							 for token in set(tokens.split()) if token not in self._stopwords]

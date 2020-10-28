@@ -28,8 +28,6 @@ class Indexer:
 		----------
 		tokenizer : Tokenizer
 			The tokenizer object.
-		index : dict
-			The indexed tokens.
 		"""
 		self._tokenizer = tokenizer
 		self._index = {}
