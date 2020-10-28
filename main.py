@@ -17,13 +17,16 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 
-def questions(indexs:Indexer):
-    logger.info("Collection memory size: %s bytes" % sys.getsizeof(indexs.index))
+def questions(indexer:Indexer) -> None:
+    """
+    Print the answers of this assignment.
+    """
+    logger.info("Collection memory size: %s bytes" % sys.getsizeof(indexer.index))
 
-    logger.info("Vocabulary size: %s tokens" % len(indexs.index))
+    logger.info("Vocabulary size: %s tokens" % len(indexer.index))
 
     data = []
-    for token, docs_id in indexs.index.items():
+    for token, docs_id in indexer.index.items():
         if len(docs_id) == 1:
             data += [token]
         # only want first ten
@@ -32,37 +35,44 @@ def questions(indexs:Indexer):
 
     logger.info('List the ten first terms (in alphabetic order) that appear in only one document:\n%s' % str(data))
 
-    data = [k for k, v in sorted(indexs.index.items(), key = lambda x: len(x[1]))[-10:]]
+    data = [k for k, v in sorted(indexer.index.items(), key = lambda x: len(x[1]))[-10:]]
     logger.info('List the ten terms with highest document frequency:\n%s' % str(data))
 
 
-def main(file_name:str, tokenizing:bool):
-    try:
-        # start tokenizing
-        start_time = time.time()
-        if not tokenizing:
-            tokenizer = SimpleTokenizer(file_name)
-        else:
-            tokenizer = ImprovedTokenizer(file_name)
-        tokenizer.tokenize()
-        logger.info("Tokenizing Time: %s seconds" % (time.time() - start_time))
+def main(data_file_path:str, improved_tokenizer:bool) -> None:
+    if not improved_tokenizer:
+        tokenizer = SimpleTokenizer(data_file_path)
+    else:
+        tokenizer = ImprovedTokenizer(data_file_path)
 
-        # start indexing
-        start_time = time.time()
-        indexs = Indexer(tokenizer)
-        indexs.indexing()
-        logger.info("Indexing Time: %s seconds" % (time.time() - start_time))   
+    indexs = Indexer(tokenizer)
 
-        # assignment questions
-        questions(indexs)
-    except FileNotFoundError as e:
-        logger.warning("File not found!")
+    # start tokenizing
+    start_time = time.time()
+    tokenizer.tokenize()
+    logger.info("Tokenizing Time: %s seconds" % (time.time() - start_time))
+
+    # start indexing
+    start_time = time.time()
+    indexs.indexing()
+    logger.info("Indexing Time: %s seconds" % (time.time() - start_time))   
+
+    # assignment questions
+    questions(indexs)
 
 
 if __name__ == "__main__":
+    """
+    EXECUTION
+    ---------
+    simple tokenizer:
+        python3 main.py -f data.csv
+    improved tokenizer:
+        python3 main.py -f data.csv -t
+    """
     parser = argparse.ArgumentParser()
-    parser.add_argument("-f", dest="file_name", required=True, help="Name of data file")
-    parser.add_argument("-t", dest="tokenizing", required=False, help="Use improved tokenizer", default=False, action='store_true')
+    parser.add_argument("-f", dest="data_file_path", required=True, help="Data file path")
+    parser.add_argument("-t", dest="improved_tokenizer", required=False, help="Use improved tokenizer", default=False, action='store_true')
     args = parser.parse_args()
 
-    main(args.file_name, args.tokenizing)
+    main(args.data_file_path, args.improved_tokenizer)
