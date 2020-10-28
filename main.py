@@ -42,17 +42,13 @@ def questions(indexer:Indexer) -> None:
 
 def main(data_file_path:str, improved_tokenizer:bool) -> None:
     corpus = CorpusReader(data_file_path)
+
     if not improved_tokenizer:
         tokenizer = SimpleTokenizer()
     else:
         tokenizer = ImprovedTokenizer()
 
-    indexs = Indexer(tokenizer, corpus)
-
-    # start tokenizing
-    # start_time = time.time()
-    # tokenizer.tokenize()
-    #   logger.info("Tokenizing Time: %s seconds" % (time.time() - start_time))
+    indexs = Indexer(corpus, tokenizer)
 
     # start indexing
     start_time = time.time()

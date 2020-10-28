@@ -14,7 +14,7 @@ class Indexer:
 	corpus : CorpusReader
 		the CorpusReader object
 	tokenizer : Tokenizer
-		The tokenizer object.
+		The Tokenizer object.
 	index : dict
 		The indexed tokens.
 
@@ -25,7 +25,7 @@ class Indexer:
 	indexing()
 		Index the tokens.
 	"""
-	def __init__(self, tokenizer: Tokenizer, corpus: CorpusReader):
+	def __init__(self, corpus:CorpusReader, tokenizer:Tokenizer):
 		"""
 		Parameters
 		----------
@@ -33,8 +33,6 @@ class Indexer:
 			the CorpusReader object with the loaded file
 		tokenizer : Tokenizer
 			The tokenizer object that will tokenize the documents.
-		index : dict
-			The indexed tokens saved to memory.
 		"""
 		self._corpus = corpus
 		self._tokenizer = tokenizer

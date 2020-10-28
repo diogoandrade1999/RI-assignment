@@ -7,9 +7,7 @@
 
 ### Simple tokenizer
 
--   Tokenizing Time: 3.260822296142578 seconds
-
--   Indexing Time: 11.22474980354309 seconds
+-   Indexing Time: 4.8881425857543945 seconds
 
 -   Collection memory size: 2621544 bytes
 
@@ -23,9 +21,7 @@
 
 ### Improved tokenizer
 
--   Tokenizing Time: 30.930962085723877 seconds
-
--   Indexing Time: 6.165861129760742 seconds
+-   Indexing Time: 32.995089054107666 seconds
 
 -   Collection memory size: 5242976 bytes
 
