@@ -1,5 +1,6 @@
 
 from Tokenizer import Tokenizer
+from CorpusReader import CorpusReader
 
 
 class Indexer:
@@ -10,6 +11,8 @@ class Indexer:
 
 	Attributes
 	----------
+	corpus : CorpusReader
+		the CorpusReader object
 	tokenizer : Tokenizer
 		The tokenizer object.
 	index : dict
@@ -22,15 +25,18 @@ class Indexer:
 	indexing()
 		Index the tokens.
 	"""
-	def __init__(self, tokenizer:Tokenizer):
+	def __init__(self, tokenizer: Tokenizer, corpus: CorpusReader):
 		"""
 		Parameters
 		----------
+		corpus: CorpusReader
+			the CorpusReader object with the loaded file
 		tokenizer : Tokenizer
-			The tokenizer object.
+			The tokenizer object that will tokenize the documents.
 		index : dict
-			The indexed tokens.
+			The indexed tokens saved to memory.
 		"""
+		self._corpus = corpus
 		self._tokenizer = tokenizer
 		self._index = {}
 
@@ -47,7 +53,8 @@ class Indexer:
 	def indexing(self) -> None:
 		"""Index the tokens."""
 		# sort first by token and then by document Id
-		self._tokenizer.tokens.sort(key=lambda x: (x[0], x[1]))
-		for token, doc_id in self._tokenizer.tokens:
-			self._index[token] = self._index.get(token, set())
-			self._index[token].add(doc_id)
+		all_files = self._corpus.process()
+		for doc_id, data in all_files.items():
+			for token in self._tokenizer.tokenize(data):
+				self._index[token] = self._index.get(token, set())
+				self._index[token].add(doc_id)
