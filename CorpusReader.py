@@ -43,7 +43,7 @@ class CorpusReader:
 		tuple
 			A dict with the data as well as a boolean value checking if we have reached the end of file.
 		"""
-		if not path.exists(self._data_file_path):
+		if not path.exists(self._data_file_path) or not path.isfile(self._data_file_path):
 			sys.exit("Data file not found!")
 
 		proc_dict = {}
