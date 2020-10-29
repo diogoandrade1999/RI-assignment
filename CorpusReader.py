@@ -37,8 +37,8 @@ class CorpusReader:
 
 		Returns
 		-------
-		dict
-			A dict with the data.
+		tuple
+			A dict with the data as well as a boolean value checking if we have reached the end of file.
 		"""
 		if not path.exists(self._data_file_path):
 			sys.exit("Data file not found!")
