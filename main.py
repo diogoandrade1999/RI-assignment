@@ -5,6 +5,8 @@ import argparse
 import logging
 import time
 import sys
+import psutil
+import os
 
 from Tokenizer import SimpleTokenizer, ImprovedTokenizer
 from Indexer import Indexer
@@ -22,7 +24,8 @@ def questions(indexer:Indexer) -> None:
     """
     Print the answers of this assignment.
     """
-    logger.info("Collection memory size: %s bytes" % sys.getsizeof(indexer.index))
+    process = psutil.Process(os.getpid())
+    logger.info("Collection memory size: %s bytes" % process.memory_info().rss)
 
     logger.info("Vocabulary size: %s tokens" % len(indexer.index))
 
