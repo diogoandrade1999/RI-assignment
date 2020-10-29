@@ -21,7 +21,7 @@
 
 ### Improved tokenizer
 
--   Indexing Time: 32.995089054107666 seconds
+-   Indexing Time: 29.666226148605347 seconds
 
 -   Collection memory size: 205127680 bytes
 
