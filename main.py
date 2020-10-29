@@ -10,6 +10,7 @@ import os
 
 from Tokenizer import SimpleTokenizer, ImprovedTokenizer
 from Indexer import Indexer
+from CorpusReader import CorpusReader
 
 
 logging.basicConfig(
@@ -29,8 +30,8 @@ def questions(indexer:Indexer) -> None:
     logger.info("Vocabulary size: %s tokens" % len(indexer.index))
 
     data = []
-    for token, docs_id in indexer.index.items():
-        if len(docs_id) == 1:
+    for token in sorted(indexer.index.keys()):
+        if len(indexer.index[token]) == 1:
             data += [token]
         # only want first ten
         if len(data) == 10:
@@ -43,17 +44,14 @@ def questions(indexer:Indexer) -> None:
 
 
 def main(data_file_path:str, improved_tokenizer:bool) -> None:
+    corpus = CorpusReader(data_file_path)
+
     if not improved_tokenizer:
-        tokenizer = SimpleTokenizer(data_file_path)
+        tokenizer = SimpleTokenizer()
     else:
-        tokenizer = ImprovedTokenizer(data_file_path)
+        tokenizer = ImprovedTokenizer()
 
-    indexs = Indexer(tokenizer)
-
-    # start tokenizing
-    start_time = time.time()
-    tokenizer.tokenize()
-    logger.info("Tokenizing Time: %s seconds" % (time.time() - start_time))
+    indexs = Indexer(corpus, tokenizer)
 
     # start indexing
     start_time = time.time()

@@ -14,24 +14,11 @@ class Tokenizer(metaclass=abc.ABCMeta):
 
 	Abstract methods
 	-------
-	tokens()
-		Return the tokens.
 	tokenize()
 		Tokenize the data.
 	"""
-	@property
 	@abc.abstractmethod
-	def tokens(self) -> list:
-		"""
-		Returns
-		-------
-		list
-			A list with tokenized data.
-		"""
-		pass
-	
-	@abc.abstractmethod
-	def tokenize(self) -> None:
+	def tokenize(self) -> list:
 		"""Tokenize the data."""
 		pass
 
@@ -42,51 +29,20 @@ class SimpleTokenizer(Tokenizer):
 
 	...
 
-	Attributes
-	----------
-	corpus : CorpusReader
-		The CorpusReader object.
-	tokens : list
-		The tokenized data.
-
 	Methods
 	-------
-	tokens()
-		Return the tokens.
 	tokenize()
 		Tokenize the data.
 	"""
-	def __init__(self, data_file_path:str):
-		"""
-		Parameters
-		----------
-		data_file_path : str
-			The data file path.
-		"""
-		self._corpus = CorpusReader(data_file_path)
-		self._tokens = []
-
-	@property
-	def tokens(self) -> list:
-		"""
-		Returns
-		-------
-		list
-			A list with tokenized data.
-		"""
-		return self._tokens
-
-	def tokenize(self) -> None:
+	def tokenize(self, data) -> list:
 		"""Tokenize the data."""
-		processed_files = self._corpus.process()
-		for doc_id, data in processed_files.items():
-			# replaces all non-alphabetic characters by a space
-			tokens = re.sub('[^a-zA-Z]+', ' ', data)
-			# put token in lowercase
-			tokens = tokens.lower()
-			# ignores all tokens with less than 3 characters
-			# ! remove duplicated tokens
-			self._tokens += [(token, doc_id) for token in set(tokens.split()) if len(token) >= 3]
+		# replaces all non-alphabetic characters by a space
+		tokens = re.sub('[^a-zA-Z]+', ' ', data)
+		# put token in lowercase
+		tokens = tokens.lower()
+		# ignores all tokens with less than 3 characters
+		# ! remove duplicated tokens
+		return [token for token in set(tokens.split()) if len(token) >= 3]
 
 
 class ImprovedTokenizer(Tokenizer):
@@ -97,52 +53,26 @@ class ImprovedTokenizer(Tokenizer):
 
 	Attributes
 	----------
-	corpus : CorpusReader
-		The CorpusReader object.
-	tokens : list
-		The tokenized data.
 	stemmer : SnowballStemmer
 		The stemmer object.
 
 	Methods
 	-------
-	tokens()
-		Return the tokens.
 	tokenize()
 		Tokenize the data.
 	"""
-	def __init__(self, data_file_path:str):
-		"""
-		Parameters
-		----------
-		data_file_path : str
-			The data file path.
-		"""
-		self._corpus = CorpusReader(data_file_path)
-		self._tokens = []
+	def __init__(self):
 		with open("stopwords.json", "r") as stop:
 			self._stopwords = set(json.load(stop))
 		self._stemmer = SnowballStemmer("english")
 
-	@property
-	def tokens(self) -> list:
-		"""
-		Returns
-		-------
-		list
-			A list with tokenized data.
-		"""
-		return self._tokens
-
-	def tokenize(self) -> None:
+	def tokenize(self, data) -> list:
 		"""Tokenize the data."""
-		processed_files = self._corpus.process()
-		for doc_id, data in processed_files.items():
-			# replaces all non-alphabetic or numeric or hyphen characters by a space
-			tokens = re.sub('[^a-zA-Z0-9\-/]+', ' ', data)
-			# put token in lowercase
-			tokens = tokens.lower()
-			# use stemmer
-			# ! remove duplicated tokens
-			self._tokens += [(self._stemmer.stem(token), doc_id)
-							 for token in set(tokens.split()) if token not in self._stopwords]
+		# replaces all non-alphabetic by a space, and keep numbers and hyphens
+		tokens = re.sub('[^a-zA-Z0-9\-]+', ' ', data)
+		# put token in lowercase
+		tokens = tokens.lower()
+		# use stemmer
+		# ! remove duplicated tokens
+		return [self._stemmer.stem(token)
+				for token in set(tokens.split()) if token not in self._stopwords]
