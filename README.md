@@ -11,7 +11,7 @@
 
 -   Indexing Time: 6.789501905441284 seconds
 
--   Collection memory size: 2621544 bytes
+-   Collection memory size: 608722944 bytes
 
 -   Vocabulary size: 61050 tokens
 
@@ -27,7 +27,7 @@
 
 -   Indexing Time: 6.165861129760742 seconds
 
--   Collection memory size: 5242976 bytes
+-   Collection memory size: 561496064 bytes
 
 -   Vocabulary size: 96515 tokens
 
