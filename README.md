@@ -7,9 +7,9 @@
 
 ### Simple tokenizer
 
--   Indexing Time: 4.8881425857543945 seconds
+-   Indexing Time: 6.28742241859436 seconds
 
--   Collection memory size: 280416256 bytes
+-   Collection memory size: 215597056 bytes
 
 -   Vocabulary size: 61050 tokens
 
@@ -23,7 +23,7 @@
 
 -   Indexing Time: 29.666226148605347 seconds
 
--   Collection memory size: 269828096 bytes
+-   Collection memory size: 205127680 bytes
 
 -   Vocabulary size: 90740 tokens
 

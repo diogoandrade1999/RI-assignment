@@ -49,10 +49,17 @@ class Indexer:
 		return self._index
 
 	def indexing(self) -> None:
-		"""Index the tokens."""
-		# sort first by token and then by document Id
-		all_files = self._corpus.process()
-		for doc_id, data in all_files.items():
-			for token in self._tokenizer.tokenize(data):
-				self._index[token] = self._index.get(token, set())
-				self._index[token].add(doc_id)
+		"""
+		Index the tokens, by processing 1000 documents at a time,
+		tokenizing these coduments and then indexing all.
+		"""
+		while True:
+			all_files, reached_end = self._corpus.process(1000)
+
+			for doc_id, data in all_files.items():
+				for token in self._tokenizer.tokenize(data):
+					self._index[token] = self._index.get(token, set())
+					self._index[token].add(doc_id)
+
+			if reached_end:
+				break
