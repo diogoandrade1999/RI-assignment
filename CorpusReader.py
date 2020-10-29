@@ -4,6 +4,7 @@ from csv import reader
 from os import path
 from itertools import islice
 
+
 class CorpusReader:
 	"""
 	Class used by process data files.
@@ -14,6 +15,8 @@ class CorpusReader:
 	----------
 	data_file_path : str
 		The data file path.
+	number_of_read_docs : int
+		The number of read docs.
 
 	Methods
 	-------
@@ -29,7 +32,7 @@ class CorpusReader:
 			The data file path.
 		"""
 		self._data_file_path = data_file_path
-		self.__number_of_read_docs = 0
+		self._number_of_read_docs = 0
 
 	def process(self, number_of_files_to_read) -> tuple:
 		"""
@@ -46,7 +49,7 @@ class CorpusReader:
 		proc_dict = {}
 		read_docs = 0
 		with open(self._data_file_path, "r") as filereader:
-			for i in range(1+self.__number_of_read_docs):
+			for i in range(self._number_of_read_docs + 1):
 				next(filereader)
 
 			csv_reader = reader(filereader)
@@ -55,5 +58,5 @@ class CorpusReader:
 					proc_dict[doc_id] = line[2] + " " + line[7]
 				read_docs += 1
 
-		self.__number_of_read_docs += number_of_files_to_read
+		self._number_of_read_docs += number_of_files_to_read
 		return proc_dict, number_of_files_to_read != read_docs
