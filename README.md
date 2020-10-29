@@ -21,11 +21,11 @@
 
 ### Improved tokenizer
 
--   Indexing Time: 32.995089054107666 seconds
+-   Indexing Time: 29.666226148605347 seconds
 
--   Collection memory size: 269791232 bytes
+-   Collection memory size: 269828096 bytes
 
--   Vocabulary size: 96515 tokens
+-   Vocabulary size: 90740 tokens
 
 -   List the ten first terms (in alphabetic order) that appear in only one document:
     ['--and', '--diseas', '--michael', '-1-7', '-1-acid', '-1-antiproteinas', '-1-cyclohexene-1-carboxyl', '-1-defici', '-1-ribosom', '-1-thiophen-2-ylethylideneamino']
