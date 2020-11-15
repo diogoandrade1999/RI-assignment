@@ -1,6 +1,7 @@
 import abc
 import re
 import json
+from collections import Counter
 
 from CorpusReader import CorpusReader
 from nltk.stem.snowball import SnowballStemmer
@@ -42,7 +43,8 @@ class SimpleTokenizer(Tokenizer):
 		tokens = tokens.lower()
 		# ignores all tokens with less than 3 characters
 		# ! remove duplicated tokens
-		return [token for token in set(tokens.split()) if len(token) >= 3]
+		token_list = [token for token in tokens.split() if len(token) >= 3]
+		return [(k, v) for k, v in dict(Counter(token_list)).items()]
 
 
 class ImprovedTokenizer(Tokenizer):
@@ -74,5 +76,6 @@ class ImprovedTokenizer(Tokenizer):
 		tokens = tokens.lower()
 		# use stemmer
 		# ! remove duplicated tokens
-		return [self._stemmer.stem(token)
-				for token in set(tokens.split()) if token not in self._stopwords]
+		token_list = [self._stemmer.stem(token)
+				for token in tokens.split() if token not in self._stopwords]
+		return [(k, v) for k, v in dict(Counter(token_list)).items()]

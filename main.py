@@ -61,6 +61,11 @@ def main(data_file_path:str, improved_tokenizer:bool) -> None:
     # assignment questions
     questions(indexs)
 
+    # assign weights to index
+    start_time = time.time()
+    indexs.process_weights()
+    logger.info("Weights Time: %s seconds" % (time.time() - start_time))
+
 
 if __name__ == "__main__":
     """
