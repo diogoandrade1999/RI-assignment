@@ -2,7 +2,7 @@
 from Tokenizer import Tokenizer
 from CorpusReader import CorpusReader
 from TokenInfo import TokenInfo
-from math import log10
+from math import log10, sqrt
 
 
 class Indexer:
@@ -59,28 +59,42 @@ class Indexer:
 			all_files, reached_end = self._corpus.process(1000)
 
 			for doc_id, data in all_files.items():
-				for token, freq in self._tokenizer.tokenize(data):
-					self._index[token] = self._index.get(token, set())
-					self._index[token].add(TokenInfo(doc_id, freq))
+				doc_weight = 0
+				token_list = self._tokenizer.tokenize(data)
+				for token, freq in token_list:
+					tf = 1 + log10(freq)
+					self._index[token] = self._index.get(token, [])
+					self._index[token].append(TokenInfo(doc_id, tf))
+					doc_weight += tf**2
+				
+				for token, freq in token_list:
+					self._index[token][-1].weight = self._index[token][-1].weight/sqrt(doc_weight)
 
 			if reached_end:
 				break
 	
 	def process_weights(self) -> None:
-		"If the indexing is completed, it is possible to attribute the tf_idf to each token"
+		"If the indexing is completed, it is possible to attribute the tf_idf to each token with the lnc method"
 		
 		if len(self._index) == 0:
 			print("You have not processed any documents")
 			return 
 		
+		weight_by_doc = {}
+
 		for token in self._index:
 			for info in self._index[token]:
-				tf = 1 + log10(info.weight)
-				idf = log10(self._corpus.number_of_read_docs/len(self._index[token]))
+				tf = 1 + log10(info.weight) ## logarithmic count
+				idf = 1 #number	
 				info.weight = tf*idf
+				if info.doc not in weight_by_doc:
+					weight_by_doc[info.doc] += 0
+
+	def get_token_search(self, token):
+		return self._index.get(token, [])
+
+	def get_token_freq(self, token):
+		if token not in self._index:
+			return 0
 		
-		count = 0
-		for token in self._index:
-			print(token, ":", self._index[token])
-			count += 1
-			if count > 5: return
+		return log10(self._corpus.number_of_read_docs/len(self._index[token]))
