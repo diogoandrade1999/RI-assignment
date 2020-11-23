@@ -57,9 +57,9 @@ class CorpusReader:
 				next(filereader)
 
 			csv_reader = reader(filereader)
-			for doc_id, line in enumerate(islice(csv_reader, number_of_files_to_read)):
-				if line[2] != "" and line[7] != "":
-					proc_dict[doc_id + self._number_of_read_docs] = line[2] + " " + line[7]
+			for line in islice(csv_reader, number_of_files_to_read):
+				if line[0] != "" and line[3] != "" and line[8] != "":
+					proc_dict[line[0]] = line[3] + " " + line[8]
 				read_docs += 1
 
 		self._number_of_read_docs += number_of_files_to_read

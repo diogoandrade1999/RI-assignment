@@ -26,7 +26,7 @@ class TokenInfo:
         return hash(self._doc)
     
     def __repr__(self):
-        return f"({self._doc}, {self._weight:.2f})"
+        return f"{self._doc}:{self._weight:.2f}"
 
     def __str__(self):
-        return f"({self._doc}, {self._weight:.2f})"
+        return f"{self._doc}:{self._weight:.2f}"

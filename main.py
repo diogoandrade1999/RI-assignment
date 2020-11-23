@@ -9,7 +9,7 @@ import psutil
 import os
 
 from Tokenizer import SimpleTokenizer, ImprovedTokenizer
-from Indexer import Indexer
+from Indexer import Indexer, IndexerBM25
 from CorpusReader import CorpusReader
 
 
@@ -43,7 +43,7 @@ def questions(indexer:Indexer) -> None:
     logger.info('List the ten terms with highest document frequency:\n%s' % str(data))
 
 
-def main(data_file_path:str, improved_tokenizer:bool) -> None:
+def main(data_file_path:str, improved_tokenizer:bool, file_to_write:str, use_bm:bool, bm_k1:float, bm_b:float) -> None:
     corpus = CorpusReader(data_file_path)
 
     if not improved_tokenizer:
@@ -51,7 +51,12 @@ def main(data_file_path:str, improved_tokenizer:bool) -> None:
     else:
         tokenizer = ImprovedTokenizer()
 
-    indexs = Indexer(corpus, tokenizer)
+    if use_bm:
+        k1 = bm_k1 if bm_k1 and 1<bm_k1<2 else 1.2
+        b = bm_b if bm_b and 0<bm_b<1 else 0.75
+        indexs = IndexerBM25(corpus, tokenizer, k1, b)
+    else:
+        indexs = Indexer(corpus, tokenizer)
 
     # start indexing
     start_time = time.time()
@@ -62,6 +67,12 @@ def main(data_file_path:str, improved_tokenizer:bool) -> None:
     questions(indexs)
 
     #lookup times
+
+    #write index
+    if file_to_write: 
+        start_time = time.time()
+        indexs.write(file_to_write)
+        logger.info("Writing Time: %s seconds" % (time.time() - start_time))   
 
 
 if __name__ == "__main__":
@@ -76,6 +87,24 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", dest="data_file_path", required=True, help="Data file path")
     parser.add_argument("-t", dest="improved_tokenizer", required=False, help="Use improved tokenizer", default=False, action='store_true')
+    parser.add_argument("-w", dest="indexer_file", required=False, help="Write index to file", default=None)
+    parser.add_argument("-b", dest="bm25", required=False, help="Use the BM25 method to rank", default=False, action='store_true')
+    parser.add_argument("--bk1", dest="bm25_k1_value", required=False, help="K value for the BM25 method", type=float)
+    parser.add_argument("--bb", dest="bm25_b_value", required=False, help="B value for the BM25 method", type=float)  
+
     args = parser.parse_args()
 
-    main(args.data_file_path, args.improved_tokenizer)
+    err_message = """
+    usage: main.py [-h] -f DATA_FILE_PATH [-t] [-w INDEXER_FILE] [-b BM25]
+               [--bk1 BM25_K1_VALUE] [--bb BM25_B_VALUE]
+    main.py: error: 
+    """
+
+    if args.bm25_b_value is not None and not args.bm25:
+        print(err_message + "you must specify the bm25 option to introduce the b value")
+
+    if args.bm25_k1_value is not None and not args.bm25:
+        print(err_message + "you must specify the bm25 option to introduce the k1 value")
+
+    main(args.data_file_path, args.improved_tokenizer, args.indexer_file, 
+        args.bm25, args.bm25_b_value, args.bm25_k1_value)
