@@ -11,6 +11,8 @@ import os
 from Tokenizer import SimpleTokenizer, ImprovedTokenizer
 from Indexer import Indexer, IndexerBM25
 from CorpusReader import CorpusReader
+from QueryReader import QueryReader
+from Query import Query
 
 
 logging.basicConfig(
@@ -43,7 +45,16 @@ def questions(indexer:Indexer) -> None:
     logger.info('List the ten terms with highest document frequency:\n%s' % str(data))
 
 
-def main(data_file_path:str, improved_tokenizer:bool, file_to_write:str, use_bm:bool, bm_k1:float, bm_b:float) -> None:
+def main(
+    data_file_path:str,
+    improved_tokenizer:bool,
+    file_to_write:str,
+    use_bm:bool,
+    bm_k1:float,
+    bm_b:float,
+    query_file_path:str,
+    query_relevance_file_path:str
+    ) -> None:
     corpus = CorpusReader(data_file_path)
 
     if not improved_tokenizer:
@@ -52,8 +63,8 @@ def main(data_file_path:str, improved_tokenizer:bool, file_to_write:str, use_bm:
         tokenizer = ImprovedTokenizer()
 
     if use_bm:
-        k1 = bm_k1 if bm_k1 and 1<bm_k1<2 else 1.2
-        b = bm_b if bm_b and 0<bm_b<1 else 0.75
+        k1 = bm_k1 if bm_k1 else 1.2
+        b = bm_b if bm_b else 0.75
         indexs = IndexerBM25(corpus, tokenizer, k1, b)
     else:
         indexs = Indexer(corpus, tokenizer)
@@ -64,15 +75,21 @@ def main(data_file_path:str, improved_tokenizer:bool, file_to_write:str, use_bm:
     logger.info("Indexing Time: %s seconds" % (time.time() - start_time))   
 
     # assignment questions
-    questions(indexs)
+    # questions(indexs)
 
-    #lookup times
-
-    #write index
+    # write index
     if file_to_write: 
         start_time = time.time()
         indexs.write(file_to_write)
         logger.info("Writing Time: %s seconds" % (time.time() - start_time))   
+
+    # read queries
+    query_reader = QueryReader(query_file_path, query_relevance_file_path)
+    for query_number, query in query_reader.queries.items():
+        lookup = Query(query, indexs, tokenizer).lookup_bm25()
+        logger.info(lookup)
+        if query_number == '1':
+            break
 
 
 if __name__ == "__main__":
@@ -91,20 +108,23 @@ if __name__ == "__main__":
     parser.add_argument("-b", dest="bm25", required=False, help="Use the BM25 method to rank", default=False, action='store_true')
     parser.add_argument("--bk1", dest="bm25_k1_value", required=False, help="K value for the BM25 method", type=float)
     parser.add_argument("--bb", dest="bm25_b_value", required=False, help="B value for the BM25 method", type=float)  
+    parser.add_argument("-q", dest="query_file_path", required=True, help="Queries file path")
+    parser.add_argument("-qr", dest="query_relevance_file_path", required=True, help="Queries relevance file path")
 
     args = parser.parse_args()
 
-    err_message = """
-    usage: main.py [-h] -f DATA_FILE_PATH [-t] [-w INDEXER_FILE] [-b BM25]
-               [--bk1 BM25_K1_VALUE] [--bb BM25_B_VALUE]
-    main.py: error: 
-    """
+    if not args.bm25 and (args.bm25_k1_value is not None or args.bm25_b_value is not None):
+        parser.error("--bk1 and --bb requires the flag -b")
+    elif args.bm25_k1_value is not None and not (1 < args.bm25_k1_value < 2):
+        parser.error("K value for the BM25 method must be greater than 1 and less than 2")
+    elif args.bm25_b_value is not None and not (0 < args.bm25_b_value < 1):
+        parser.error("B value for the BM25 method must be greater than 0 and less than 1")
 
-    if args.bm25_b_value is not None and not args.bm25:
-        print(err_message + "you must specify the bm25 option to introduce the b value")
-
-    if args.bm25_k1_value is not None and not args.bm25:
-        print(err_message + "you must specify the bm25 option to introduce the k1 value")
-
-    main(args.data_file_path, args.improved_tokenizer, args.indexer_file, 
-        args.bm25, args.bm25_b_value, args.bm25_k1_value)
+    main(args.data_file_path,
+         args.improved_tokenizer,
+         args.indexer_file, 
+         args.bm25,
+         args.bm25_b_value,
+         args.bm25_k1_value,
+         args.query_file_path,
+         args.query_relevance_file_path)
