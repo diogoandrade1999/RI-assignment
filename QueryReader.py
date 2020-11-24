@@ -44,5 +44,5 @@ class QueryReader:
         with open(self._query_relevance_file_path, "r") as queries:
             for query in queries:
                 query_id, cord_ui, relevance = query.rstrip().split(' ')
-                self._queries_relevance[query_id] = self._queries_relevance.get(query_id, {'0': [], '1': [], '2': []})
-                self._queries_relevance[query_id][relevance] += [cord_ui]
+                self._queries_relevance[query_id] = self._queries_relevance.get(query_id, {0: set(), 1: set(), 2: set()})
+                self._queries_relevance[query_id][int(relevance)].add(cord_ui)

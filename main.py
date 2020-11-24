@@ -8,7 +8,7 @@ import sys
 import psutil
 import os
 
-from Tokenizer import SimpleTokenizer, ImprovedTokenizer
+from Tokenizer import Tokenizer, SimpleTokenizer, ImprovedTokenizer
 from Indexer import Indexer, IndexerBM25
 from CorpusReader import CorpusReader
 from QueryReader import QueryReader
@@ -45,6 +45,62 @@ def questions(indexer:Indexer) -> None:
     logger.info('List the ten terms with highest document frequency:\n%s' % str(data))
 
 
+def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_bm:bool) -> None:
+    resulsts = {}
+    for query_number, query in query_reader.queries.items():
+        start_time = time.time()
+
+        query_search = Query(query, indexer, tokenizer)
+
+        if use_bm:
+            docs = query_search.lookup_bm25()
+        else:
+            docs = query_search.lookup_idf()
+
+        latency = time.time() - start_time
+
+        docs_relevance = query_reader.queries_relevance[query_number][1].union(
+                            query_reader.queries_relevance[query_number][2])
+        docs_retrieved = set(docs.keys())
+        docs_relevance_retrieved = docs_retrieved & docs_relevance
+
+        num_docs_relevance = len(docs_relevance)
+        num_docs_retrieved = len(docs_retrieved)
+        num_docs_relevance_retrieved = len(docs_relevance_retrieved)
+        
+        precision = 0
+        recall = 0
+        f_measure = 0
+        average_precision = 0
+        dcg = 0
+        ndcg = 0
+
+        if num_docs_relevance_retrieved != 0:
+            if num_docs_retrieved != 0:
+                precision = num_docs_relevance_retrieved / num_docs_retrieved
+
+            if num_docs_relevance != 0:
+                recall = num_docs_relevance_retrieved / num_docs_relevance
+
+            if (precision + recall) != 0:
+                f_measure = (2 * precision * recall) / (precision + recall)
+
+            # está mal
+            docs_precision = [docs[doc] for doc in docs_relevance_retrieved]
+            average_precision = sum(docs_precision) / num_docs_relevance_retrieved
+
+
+        resulsts[query_number] = (precision, recall, f_measure, average_precision, ndcg, latency)
+        
+        # if query_number == '1':
+        #     break
+
+    logger.info(' #  Precision Recall    F-measure Average Precision NDCG      Latency')
+    for query_number, values in resulsts.items():
+        precision, recall, f_measure, average_precision, ndcg, latency = values
+        logger.info('%2s %9f %9f %9f %9f %17f %9f' % (query_number, precision, recall, f_measure, average_precision, ndcg, latency))
+
+
 def main(
     data_file_path:str,
     improved_tokenizer:bool,
@@ -55,41 +111,42 @@ def main(
     query_file_path:str,
     query_relevance_file_path:str
     ) -> None:
+    # read data file
     corpus = CorpusReader(data_file_path)
 
+    # read queries
+    query_reader = QueryReader(query_file_path, query_relevance_file_path)
+ 
+    # create tokenizer
     if not improved_tokenizer:
         tokenizer = SimpleTokenizer()
     else:
         tokenizer = ImprovedTokenizer()
 
+    # create indexer
     if use_bm:
         k1 = bm_k1 if bm_k1 else 1.2
         b = bm_b if bm_b else 0.75
-        indexs = IndexerBM25(corpus, tokenizer, k1, b)
+        indexer = IndexerBM25(corpus, tokenizer, k1, b)
     else:
-        indexs = Indexer(corpus, tokenizer)
+        indexer = Indexer(corpus, tokenizer)   
 
     # start indexing
     start_time = time.time()
-    indexs.indexing()
+    indexer.indexing()
     logger.info("Indexing Time: %s seconds" % (time.time() - start_time))   
 
     # assignment questions
-    # questions(indexs)
+    # questions(indexer)
 
     # write index
     if file_to_write: 
         start_time = time.time()
-        indexs.write(file_to_write)
+        indexer.write(file_to_write)
         logger.info("Writing Time: %s seconds" % (time.time() - start_time))   
 
-    # read queries
-    query_reader = QueryReader(query_file_path, query_relevance_file_path)
-    for query_number, query in query_reader.queries.items():
-        lookup = Query(query, indexs, tokenizer).lookup_bm25()
-        logger.info(lookup)
-        if query_number == '1':
-            break
+    # metrics
+    metrics(query_reader, indexer, tokenizer, use_bm)
 
 
 if __name__ == "__main__":

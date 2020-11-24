@@ -35,8 +35,9 @@ class Query:
                     prox_by_doc[doc] = 0
                 prox_by_doc[doc] += self._query_vector[token] * token_info.weight
 
-        return sorted(list(prox_by_doc.items()), key=lambda t: t[1])
-    
+        #return sorted(list(prox_by_doc.items()), key=lambda t: t[1])
+        return {k: v for k, v in sorted(prox_by_doc.items(), key=lambda t: t[1])}
+
     def lookup_bm25(self):
         prox_by_doc = {}
         for token in self._tokenizer.tokenize(self._query):
@@ -46,4 +47,5 @@ class Query:
                     prox_by_doc[doc] = 0
                 prox_by_doc[doc] += token_info.weight
 
-        return sorted(list(prox_by_doc.items()), key=lambda t: t[1])
+        # return sorted(list(prox_by_doc.items()), key=lambda t: t[1])
+        return {k: v for k, v in sorted(prox_by_doc.items(), key=lambda t: t[1])}
