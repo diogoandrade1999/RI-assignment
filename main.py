@@ -70,15 +70,14 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
         docs_retrieved = [doc_id for doc_id, weigth in docs]
 
         for x in [10, 20, 50]:
-            # docs_relevance = set(list(docs_relevance)[:x])
             docs_retrieved = set(list(docs_retrieved)[:x])
 
             docs_relevance_retrieved = docs_retrieved & docs_relevance
 
-            # num_docs_relevance = len(docs_relevance)
-            num_docs_relevance = x
-            # num_docs_retrieved = len(docs_retrieved)
+            num_docs_relevance = len(docs_relevance)
+
             num_docs_retrieved = x
+
             num_docs_relevance_retrieved = len(docs_relevance_retrieved)
 
             precision = 0
@@ -97,9 +96,13 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
                 if (precision + recall) != 0:
                     f_measure = (2 * precision * recall) / (precision + recall)
 
-                # está mal
-                #docs_precision = [docs[doc] for doc in docs_relevance_retrieved]
-                #average_precision = sum(docs_precision) / num_docs_relevance_retrieved
+                docs_precision = 0
+                for i in range(len(docs_retrieved)):
+                    k = i + 1
+                    docs_retrieved_ap = set(list(docs_retrieved)[:k])
+                    docs_relevance_retrieved_ap = docs_retrieved_ap & docs_relevance
+                    docs_precision += len(docs_relevance_retrieved_ap) / k
+                average_precision = docs_precision / num_docs_relevance
 
                 dcg = 0
             results[query_number][x] = (precision, recall, f_measure, average_precision, ndcg)
