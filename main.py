@@ -7,6 +7,7 @@ import time
 import sys
 import psutil
 import os
+from pprint import pprint
 
 from Tokenizer import Tokenizer, SimpleTokenizer, ImprovedTokenizer
 from Indexer import Indexer, IndexerBM25
@@ -48,6 +49,8 @@ def questions(indexer:Indexer) -> None:
 def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_bm:bool) -> None:
     results = {}
     for query_number, query in query_reader.queries.items():
+        results[query_number] = {}
+        
         start_time = time.time()
 
         query_search = Query(query, indexer, tokenizer)
@@ -56,22 +59,23 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
             docs = query_search.lookup_bm25()
         else:
             docs = query_search.lookup_idf()
-        
-        latency = time.time() - start_time
+
+        results[query_number]['latency'] = time.time() - start_time
 
         docs_relevance = query_reader.queries_relevance[query_number][1].union(
                             query_reader.queries_relevance[query_number][2])
-        docs_retrieved = set(docs.keys())
+        docs_retrieved = [doc_id for doc_id, weigth in docs]
 
-        results[query_number] = {}
-        results[query_number]['latency'] = latency
         for x in [10, 20, 50]:
+            # docs_relevance = set(list(docs_relevance)[:x])
             docs_retrieved = set(list(docs_retrieved)[:x])
 
             docs_relevance_retrieved = docs_retrieved & docs_relevance
 
-            num_docs_relevance = len(docs_relevance)
-            num_docs_retrieved = len(docs_retrieved)
+            # num_docs_relevance = len(docs_relevance)
+            num_docs_relevance = x
+            # num_docs_retrieved = len(docs_retrieved)
+            num_docs_retrieved = x
             num_docs_relevance_retrieved = len(docs_relevance_retrieved)
 
             precision = 0
@@ -91,15 +95,15 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
                     f_measure = (2 * precision * recall) / (precision + recall)
 
                 # está mal
-                docs_precision = [docs[doc] for doc in docs_relevance_retrieved]
-                average_precision = sum(docs_precision) / num_docs_relevance_retrieved
+                #docs_precision = [docs[doc] for doc in docs_relevance_retrieved]
+                #average_precision = sum(docs_precision) / num_docs_relevance_retrieved
 
                 dcg = 0
             results[query_number][x] = (precision, recall, f_measure, average_precision, ndcg)
 
-    logger.info(' # %25s %25s %25s %30s %25s %25s' % ('Precision', 'Recall', 'F-measure', 'Average Precision', 'NDCG', 'Latency'))
+    logger.info(' # %29s %29s %29s %29s %29s  Latency' % ('Precision', 'Recall', 'F-measure', 'Average Precision', 'NDCG'))
     logger.info('   %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s' % \
-        ('@10', '@20', '@30', '@10', '@20', '@30', '@10', '@20', '@30', '@10', '@20', '@30', '@10', '@20', '@30'))
+        ('@10', '@20', '@50', '@10', '@20', '@50', '@10', '@20', '@50', '@10', '@20', '@50', '@10', '@20', '@50'))
     for query_number, x in results.items():
         precision1, recall1, f_measure1, average_precision1, ndcg1 = x[10]
         precision2, recall2, f_measure2, average_precision2, ndcg2 = x[20]
