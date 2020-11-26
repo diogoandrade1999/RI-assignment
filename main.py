@@ -56,7 +56,7 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
             docs = query_search.lookup_bm25()
         else:
             docs = query_search.lookup_idf()
-
+        
         latency = time.time() - start_time
 
         docs_relevance = query_reader.queries_relevance[query_number][1].union(

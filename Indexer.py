@@ -110,9 +110,9 @@ class IndexerBM25(Indexer):
 	
 	def indexing(self):
 		doc_lens = {}
+		avg_doc_len = 0	
 		while True:
 			all_files, reached_end = self._corpus.process(1000)
-			avg_doc_len = 0
 			for doc_id, data in all_files.items():
 				token_list = self._tokenizer.tokenize(data)
 				doc_lens[doc_id] = len(token_list)
