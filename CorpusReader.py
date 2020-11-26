@@ -13,8 +13,6 @@ class CorpusReader:
 
 	Attributes
 	----------
-	data_file_path : str
-		The data file path.
 	number_of_read_docs : int
 		The number of read docs.
 

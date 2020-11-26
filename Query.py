@@ -1,30 +1,55 @@
+from collections import Counter
+from math import sqrt
+
 from Tokenizer import Tokenizer
 from Indexer import Indexer
-from math import sqrt
-from collections import Counter
+
 
 class Query:
+    """
+    Class used to read queries.
+
+    ...
+
+    Methods
+    -------
+    __process()
+        ...
+    lookup_idf()
+        ...
+    lookup_bm25()
+        ...
+    """
     def __init__(self, query:str, index:Indexer, tokenizer:Tokenizer):
+        """
+        Parameters
+        ----------
+        query : str
+            The query file path.
+        index : Indexer
+            The indexer object.
+        tokenizer : Tokenizer
+            The tokenizer object that will tokenize the documents.
+        """
         self._query = query
         self._tokenizer = tokenizer
         self._index = index
-
         self._query_vector = {}
 
-    def __process(self):
-        ## First step, tokenize the query and get the weights
+    def __process(self) -> None:
+        # * First step, tokenize the query and get the weights
         weight_total = 0
         token_list = self._tokenizer.tokenize(self._query)
         token_list = dict(Counter(token_list)).items()
         for token, freq in token_list:
-            weight = freq*self._index.get_token_freq(token)
+            weight = freq * self._index.get_token_freq(token)
             self._query_vector[token] = weight
-            weight_total += weight**2
+            weight_total += weight ** 2
             
         for token in self._query_vector:
-            self._query_vector[token] = weight/sqrt(weight_total)
+            self._query_vector[token] = weight / sqrt(weight_total)
     
-    def lookup_idf(self):
+    def lookup_idf(self) -> list:
         self.__process()
         prox_by_doc = {}
 
@@ -37,7 +62,7 @@ class Query:
 
         return sorted(prox_by_doc.items(), key=lambda t: t[1], reverse=True)
 
-    def lookup_bm25(self):
+    def lookup_bm25(self) -> list:
         prox_by_doc = {}
         for token in self._tokenizer.tokenize(self._query):
             for token_info in self._index.get_token_search(token):

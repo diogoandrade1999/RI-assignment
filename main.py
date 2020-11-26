@@ -46,7 +46,10 @@ def questions(indexer:Indexer) -> None:
     logger.info('List the ten terms with highest document frequency:\n%s' % str(data))
 
 
-def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_bm:bool) -> None:
+def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_bm:bool) -> dict:
+    """
+    Calculation of metrics.
+    """
     results = {}
     for query_number, query in query_reader.queries.items():
         results[query_number] = {}
@@ -100,7 +103,13 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
 
                 dcg = 0
             results[query_number][x] = (precision, recall, f_measure, average_precision, ndcg)
+    return results
 
+
+def print_metrics(results:dict) -> None:
+    """
+    Print the metrics.
+    """
     logger.info(' # %29s %29s %29s %29s %29s  Latency' % ('Precision', 'Recall', 'F-measure', 'Average Precision', 'NDCG'))
     logger.info('   %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s' % \
         ('@10', '@20', '@50', '@10', '@20', '@50', '@10', '@20', '@50', '@10', '@20', '@50', '@10', '@20', '@50'))
@@ -162,7 +171,7 @@ def main(
         logger.info("Writing Time: %s seconds" % (time.time() - start_time))   
 
     # metrics
-    metrics(query_reader, indexer, tokenizer, use_bm)
+    print_metrics(metrics(query_reader, indexer, tokenizer, use_bm))
 
 
 if __name__ == "__main__":

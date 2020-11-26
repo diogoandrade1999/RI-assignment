@@ -2,6 +2,27 @@ import xml.etree.ElementTree as ET
 
 
 class QueryReader:
+    """
+    Class used to read queries.
+
+    ...
+
+    Attributes
+    ----------
+    queries : dict
+        The list of queries.
+    queries_relevance : dict
+        The list of relevant queries.
+
+    Methods
+    -------
+    _read_queries_xml()
+        Read the file with the list of queries. File format xml.
+    _read_queries_txt()
+        Read the file with the list of queries. File format txt.
+    _read_queries_relevance()
+        Read the file with the list of relevant queries.
+    """
     def __init__(self, query_file_path:str, query_relevance_file_path):
         """
         Parameters
@@ -28,18 +49,21 @@ class QueryReader:
         return self._queries_relevance
 
     def _read_queries_xml(self) -> None:
+        """Read the file with the list of queries. File format xml."""
         self._queries = {}
         topics = ET.parse(self._query_file_path).getroot()
         for topic in topics:
             self._queries[topic.attrib['number']] = topic[0].text
 
     def _read_queries_txt(self) -> None:
+        """Read the file with the list of queries. File format txt."""
         self._queries = {}
         with open(self._query_file_path, "r") as queries:
             for query_id, query in enumerate(queries, start=1):
                 self._queries[str(query_id)] = query.rstrip()
 
     def _read_queries_relevance(self):
+        """Read the file with the list of relevant queries."""
         self._queries_relevance = {}
         with open(self._query_relevance_file_path, "r") as queries:
             for query in queries:
