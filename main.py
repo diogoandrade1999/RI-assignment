@@ -7,7 +7,6 @@ import time
 import sys
 import psutil
 import os
-from pprint import pprint
 
 from Tokenizer import Tokenizer, SimpleTokenizer, ImprovedTokenizer
 from Indexer import Indexer, IndexerBM25
