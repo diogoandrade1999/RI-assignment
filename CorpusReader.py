@@ -32,6 +32,7 @@ class CorpusReader:
 			The data file path.
 		"""
 		self._data_file_path = data_file_path
+		self._doc_index = 0
 		self._number_of_read_docs = 0
 
 	@property
@@ -53,14 +54,15 @@ class CorpusReader:
 		proc_dict = {}
 		read_docs = 0
 		with open(self._data_file_path, "r") as filereader:
-			for i in range(self._number_of_read_docs + 1):
+			for i in range(self._doc_index + 1):
 				next(filereader)
 
 			csv_reader = reader(filereader)
 			for line in islice(csv_reader, number_of_files_to_read):
 				if line[0] != "" and line[3] != "" and line[8] != "":
 					proc_dict[line[0]] = line[3] + " " + line[8]
+					self._number_of_read_docs += 1
 				read_docs += 1
 
-		self._number_of_read_docs += number_of_files_to_read
+		self._doc_index += number_of_files_to_read
 		return proc_dict, number_of_files_to_read != read_docs

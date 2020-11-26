@@ -56,7 +56,7 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
             docs = query_search.lookup_bm25()
         else:
             docs = query_search.lookup_idf()
-
+        
         latency = time.time() - start_time
 
         docs_relevance = query_reader.queries_relevance[query_number][1].union(
@@ -91,9 +91,6 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
 
 
         resulsts[query_number] = (precision, recall, f_measure, average_precision, ndcg, latency)
-        
-        # if query_number == '1':
-        #     break
 
     logger.info(' #  Precision Recall    F-measure Average Precision NDCG      Latency')
     for query_number, values in resulsts.items():
