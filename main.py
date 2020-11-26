@@ -66,10 +66,10 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
 
         docs_relevance = query_reader.queries_relevance[query_number][1].union(
                             query_reader.queries_relevance[query_number][2])
-        docs_retrieved = [doc_id for doc_id, weigth in docs]
+        docs_retrieved_total = [doc_id for doc_id, weigth in docs]
 
         for x in [10, 20, 50]:
-            docs_retrieved = set(list(docs_retrieved)[:x])
+            docs_retrieved = set(list(docs_retrieved_total)[:x])
 
             docs_relevance_retrieved = docs_retrieved & docs_relevance
 
@@ -112,15 +112,51 @@ def print_metrics(results:dict) -> None:
     """
     Print the metrics.
     """
-    logger.info(' # %29s %29s %29s %29s %29s  Latency' % ('Precision', 'Recall', 'F-measure', 'Average Precision', 'NDCG'))
+    logger.info('   # %29s %29s %29s %29s %29s  Latency' % ('Precision', 'Recall', 'F-measure', 'Average Precision', 'NDCG'))
     logger.info('   %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s %9s' % \
         ('@10', '@20', '@50', '@10', '@20', '@50', '@10', '@20', '@50', '@10', '@20', '@50', '@10', '@20', '@50'))
+
+    precision1_total = 0
+    recall1_total = 0
+    f_measure1_total = 0
+    average_precision1_total = 0
+    ndcg1_total = 0
+    precision2_total = 0
+    recall2_total = 0
+    f_measure2_total = 0
+    average_precision2_total = 0
+    ndcg2_total = 0
+    precision3_total = 0
+    recall3_total = 0
+    f_measure3_total = 0
+    average_precision3_total = 0
+    ndcg3_total = 0
+    latency_total = 0
+
     for query_number, x in results.items():
         precision1, recall1, f_measure1, average_precision1, ndcg1 = x[10]
         precision2, recall2, f_measure2, average_precision2, ndcg2 = x[20]
         precision3, recall3, f_measure3, average_precision3, ndcg3 = x[50]
         latency = x['latency']
-        logger.info('%2s %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f' % \
+
+        precision1_total += precision1
+        recall1_total += recall1
+        f_measure1_total += f_measure1
+        average_precision1_total += average_precision1
+        ndcg1_total += ndcg1
+        precision2_total += precision2
+        recall2_total += recall2
+        f_measure2_total += f_measure2
+        average_precision2_total += average_precision2
+        ndcg2_total += ndcg2
+        precision3_total += precision3
+        recall3_total += recall3
+        f_measure3_total += f_measure3
+        average_precision3_total += average_precision3
+        ndcg3_total += ndcg3
+        latency_total += x['latency']
+
+        logger.info('%4s %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f' % \
             (query_number,
             precision1, precision2, precision3,
             recall1, recall2, recall3,
@@ -128,6 +164,14 @@ def print_metrics(results:dict) -> None:
             average_precision1, average_precision2, average_precision3,
             ndcg1, ndcg2, ndcg3,
             latency))
+
+    logger.info('mean %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f' % \
+            (precision1_total / 50, precision2_total / 50, precision3_total / 50,
+            recall1_total / 50, recall2_total / 50, recall3_total / 50,
+            f_measure1_total / 50, f_measure2_total / 50, f_measure3_total / 50,
+            average_precision1_total / 50, average_precision2_total / 50, average_precision3_total / 50,
+            ndcg1_total / 50, ndcg2_total / 50, ndcg3_total / 50,
+            latency_total / 50))
 
 
 def main(
