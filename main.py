@@ -7,6 +7,7 @@ import time
 import sys
 import psutil
 import os
+from math import log2
 
 from Tokenizer import Tokenizer, SimpleTokenizer, ImprovedTokenizer
 from Indexer import Indexer, IndexerBM25
@@ -64,18 +65,18 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
 
         results[query_number]['latency'] = time.time() - start_time
 
-        docs_relevance = query_reader.queries_relevance[query_number][1].union(
-                            query_reader.queries_relevance[query_number][2])
+        docs_relevance = query_reader.queries_relevance[query_number][0].union(
+                            query_reader.queries_relevance[query_number][1]).union(
+                                query_reader.queries_relevance[query_number][2]
+                            )
         docs_retrieved_total = [doc_id for doc_id, weigth in docs]
 
-        for x in [10, 20, 50]:
-            docs_retrieved = set(list(docs_retrieved_total)[:x])
+        for num_docs_retrieved in [10, 20, 50]:
+            docs_retrieved = set(list(docs_retrieved_total)[:num_docs_retrieved])
 
             docs_relevance_retrieved = docs_retrieved & docs_relevance
 
             num_docs_relevance = len(docs_relevance)
-
-            num_docs_retrieved = x
 
             num_docs_relevance_retrieved = len(docs_relevance_retrieved)
 
@@ -96,15 +97,21 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
                     f_measure = (2 * precision * recall) / (precision + recall)
 
                 docs_precision = 0
+                dcg = 0
                 for i in range(len(docs_retrieved)):
                     k = i + 1
                     docs_retrieved_ap = set(list(docs_retrieved)[:k])
                     docs_relevance_retrieved_ap = docs_retrieved_ap & docs_relevance
                     docs_precision += len(docs_relevance_retrieved_ap) / k
+                    if i == 0: 
+                        dcg = query_reader.get_rank_value(query_number, docs_retrieved_total[i])
+                        continue
+                    dcg += query_reader.get_rank_value(query_number, docs_retrieved_total[i])/log2(k)
                 average_precision = docs_precision / num_docs_relevance
-
-                dcg = 0
-            results[query_number][x] = (precision, recall, f_measure, average_precision, ndcg)
+                perfect_rank = query_reader.get_perfect_dcg(query_number, num_docs_retrieved)
+                if perfect_rank != 0: ndcg = dcg/query_reader.get_perfect_dcg(query_number, num_docs_retrieved)
+                else: ndcg = 0
+                results[query_number][num_docs_retrieved] = (precision, recall, f_measure, average_precision, ndcg)
     return results
 
 

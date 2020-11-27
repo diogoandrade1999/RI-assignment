@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from math import log2
 
 
 class QueryReader:
@@ -70,3 +71,22 @@ class QueryReader:
                 query_id, cord_ui, relevance = query.rstrip().split(' ')
                 self._queries_relevance[query_id] = self._queries_relevance.get(query_id, {0: set(), 1: set(), 2: set()})
                 self._queries_relevance[query_id][int(relevance)].add(cord_ui)
+
+    def get_perfect_dcg(self, query_id, num_docs):
+        perfect_rank = 0
+        num_sums = 0
+        for i in range(2,0,-1):
+            perfect_docs = self._queries_relevance[query_id][i]
+            for doc in perfect_docs:
+                num_sums += 1
+                if num_sums == 1: 
+                    perfect_rank = i
+                    continue
+                perfect_rank += i/log2(num_sums)
+                if num_sums == num_docs: return perfect_rank
+        return perfect_rank
+    
+    def get_rank_value(self, query_id, doc):
+        if doc in self._queries_relevance[query_id][2]: return 2
+        if doc in self._queries_relevance[query_id][1]: return 1
+        return 0
