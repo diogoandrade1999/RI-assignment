@@ -103,15 +103,19 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
                     docs_retrieved_ap = set(list(docs_retrieved)[:k])
                     docs_relevance_retrieved_ap = docs_retrieved_ap & docs_relevance
                     docs_precision += len(docs_relevance_retrieved_ap) / k
+
                     if i == 0: 
                         dcg = query_reader.get_rank_value(query_number, docs_retrieved_total[i])
                         continue
                     dcg += query_reader.get_rank_value(query_number, docs_retrieved_total[i])/log2(k)
+
                 average_precision = docs_precision / num_docs_relevance
+
                 perfect_rank = query_reader.get_perfect_dcg(query_number, num_docs_retrieved)
-                if perfect_rank != 0: ndcg = dcg/query_reader.get_perfect_dcg(query_number, num_docs_retrieved)
-                else: ndcg = 0
-                results[query_number][num_docs_retrieved] = (precision, recall, f_measure, average_precision, ndcg)
+                if perfect_rank != 0:
+                    ndcg = dcg / query_reader.get_perfect_dcg(query_number, num_docs_retrieved)
+
+            results[query_number][num_docs_retrieved] = (precision, recall, f_measure, average_precision, ndcg)
     return results
 
 
