@@ -51,7 +51,7 @@ class Query:
             
         for token in self._query_vector:
             self._query_vector[token] = weight / sqrt(weight_total)
-    
+
     def lookup_idf(self) -> list:
         """
         Search the tokens relevant for the query. Using idf.
