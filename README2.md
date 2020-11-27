@@ -1,4 +1,4 @@
-# RI-assignment1
+# RI-assignment2
 
 `Diogo Andrade 89265 MEI`
 `Pedro Oliveira 89156 MEI`
