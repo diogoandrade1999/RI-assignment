@@ -185,7 +185,7 @@ def print_metrics(results:dict) -> None:
             average_precision1_total / 50, average_precision2_total / 50, average_precision3_total / 50,
             ndcg1_total / 50, ndcg2_total / 50, ndcg3_total / 50,
             latency_total[23] + latency_total[24]))
-    logger.info('Query throughput: %9f', 50/sum(latency_total))
+    logger.info('Query throughput: %9f', 50 / sum(latency_total))
 
 
 def main(
