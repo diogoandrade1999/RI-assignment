@@ -110,7 +110,7 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
                 average_precision = docs_precision / num_docs_relevance
                 perfect_rank = query_reader.get_perfect_dcg(query_number, num_docs_retrieved)
                 if perfect_rank != 0: ndcg = dcg/query_reader.get_perfect_dcg(query_number, num_docs_retrieved)
-                else: ndcg = 0
+                else: ndcg = 0  
                 results[query_number][num_docs_retrieved] = (precision, recall, f_measure, average_precision, ndcg)
     return results
 
@@ -138,7 +138,7 @@ def print_metrics(results:dict) -> None:
     f_measure3_total = 0
     average_precision3_total = 0
     ndcg3_total = 0
-    latency_total = 0
+    latency_total = []
 
     for query_number, x in results.items():
         precision1, recall1, f_measure1, average_precision1, ndcg1 = x[10]
@@ -161,7 +161,7 @@ def print_metrics(results:dict) -> None:
         f_measure3_total += f_measure3
         average_precision3_total += average_precision3
         ndcg3_total += ndcg3
-        latency_total += x['latency']
+        latency_total.append(latency)
 
         logger.info('%4s %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f' % \
             (query_number,
@@ -172,13 +172,16 @@ def print_metrics(results:dict) -> None:
             ndcg1, ndcg2, ndcg3,
             latency))
 
+    latency_total = sorted(latency_total)
+
     logger.info('mean %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f %9f' % \
             (precision1_total / 50, precision2_total / 50, precision3_total / 50,
             recall1_total / 50, recall2_total / 50, recall3_total / 50,
             f_measure1_total / 50, f_measure2_total / 50, f_measure3_total / 50,
             average_precision1_total / 50, average_precision2_total / 50, average_precision3_total / 50,
             ndcg1_total / 50, ndcg2_total / 50, ndcg3_total / 50,
-            latency_total / 50))
+            latency_total[23] + latency_total[24]))
+    logger.info('Query throughput: %9f', 50/sum(latency_total))
 
 
 def main(
