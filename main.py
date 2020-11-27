@@ -236,9 +236,9 @@ if __name__ == "__main__":
     EXECUTION
     ---------
     simple tokenizer:
-        python3 main.py -f data.csv
+        python3 main.py -f data.csv -q queries.txt -qr queries.relevance.filtered.txt
     improved tokenizer:
-        python3 main.py -f data.csv -t
+        python3 main.py -f data.csv -t -q queries.txt -qr queries.relevance.filtered.txt
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", dest="data_file_path", required=True, help="Data file path")
