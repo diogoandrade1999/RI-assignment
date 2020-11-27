@@ -111,7 +111,8 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
                 perfect_rank = query_reader.get_perfect_dcg(query_number, num_docs_retrieved)
                 if perfect_rank != 0: ndcg = dcg/query_reader.get_perfect_dcg(query_number, num_docs_retrieved)
                 else: ndcg = 0  
-                results[query_number][num_docs_retrieved] = (precision, recall, f_measure, average_precision, ndcg)
+            
+            results[query_number][num_docs_retrieved] = (precision, recall, f_measure, average_precision, ndcg)
     return results
 
 
