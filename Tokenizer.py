@@ -42,8 +42,7 @@ class SimpleTokenizer(Tokenizer):
 		tokens = tokens.lower()
 		# ignores all tokens with less than 3 characters
 		# ! remove duplicated tokens
-		return [token for token in set(tokens.split()) if len(token) >= 3]
-
+		return [token for token in tokens.split() if len(token) >= 3]
 
 class ImprovedTokenizer(Tokenizer):
 	"""
@@ -75,4 +74,4 @@ class ImprovedTokenizer(Tokenizer):
 		# use stemmer
 		# ! remove duplicated tokens
 		return [self._stemmer.stem(token)
-				for token in set(tokens.split()) if token not in self._stopwords]
+				for token in tokens.split() if token not in self._stopwords]
