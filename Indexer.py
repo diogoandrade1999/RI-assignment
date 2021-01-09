@@ -340,7 +340,7 @@ class IndexerBM25(Indexer):
 					(self._k1 * ((1 - self._b) + self._b * int(doc_len) / self._avg_doc_len) + float(term_weight))
 				new_term_info += f";{doc_id}:{real_weight:.2f}"
 
-			final_index_writer.write(f"{term}:{term_freq:.2f}" + new_term_info + "\n")
+			final_index_writer.write(f"{term}:{term_freq:.3f}" + new_term_info + "\n")
 
 		merged_index_reader.close()
 		os.remove(onlyfiles)
