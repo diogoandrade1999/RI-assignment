@@ -12,7 +12,7 @@ class TokenInfo:
     weight : int
         The weight of that token.
     """
-    def __init__(self, doc, doc_freq):
+    def __init__(self, doc, doc_freq, doc_len=0):
         """
         Parameters
         ----------
@@ -20,9 +20,12 @@ class TokenInfo:
             The document id.
         doc_freq : int
             The number of times we find that token on document.
+        doc_len : int
+            The number of tokens in the document.
         """
         self._doc = doc
         self._weight = doc_freq
+        self._doc_len = doc_len
 
     @property
     def doc(self):
@@ -30,7 +33,11 @@ class TokenInfo:
 
     @property
     def weight(self):
-        return self._weight 
+        return self._weight
+    
+    @property
+    def doc_len(self):
+        return self._doc_len
 
     @weight.setter
     def weight(self, new_weight):
@@ -47,7 +54,13 @@ class TokenInfo:
         return hash(self._doc)
 
     def __repr__(self):
+        if self._doc_len >0:
+            return f"{self._doc},{self._doc_len}:{self._weight:.2f}"
+
         return f"{self._doc}:{self._weight:.2f}"
 
     def __str__(self):
+        if self._doc_len >0:
+            return f"{self._doc},{self._doc_len}:{self._weight:.2f}"
+            
         return f"{self._doc}:{self._weight:.2f}"

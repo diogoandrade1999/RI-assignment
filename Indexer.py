@@ -42,6 +42,7 @@ class Indexer:
 		self._tokenizer = tokenizer
 		self._index = {}
 		self._index_folder = index_folder
+		self._mem_limit = 8*1024*1024 #capping off at 8 MiB
 
 	@property
 	def index(self) -> dict:
@@ -137,7 +138,6 @@ class Indexer:
 
 				if len(to_close) > 0:
 					for line in to_close: 
-						#print(line)
 						line_by_reader[line][0].close()
 						os.remove(line)
 						line_by_reader.pop(line)
@@ -165,7 +165,7 @@ class Indexer:
 			
 	def _calculate_weights(self) -> None:
 		"""
-		Rewrite the final index document to have the proper term weights
+		Rewrite the final index document to have the proper term weights according to the tf-idf
 		"""
 		onlyfiles = [self._index_folder + "/" + f for f in os.listdir(self._index_folder) if os.path.isfile(os.path.join(self._index_folder, f))][0]
 		merged_index_reader = open(onlyfiles, "r")
@@ -193,6 +193,30 @@ class Indexer:
 		Final component of the index building pipeline where we divide the final index document in various,
 		smaller documents
 		"""
+		with open(self._index_folder + "/final-index.txt", "r") as index_reader:
+			line_to_write = ""
+			starter_token = ""
+			while True:
+				read_line = index_reader.readline()
+				if read_line == "":
+					filename = "/"+starter_token + ".txt"
+					with open(self._index_folder + filename, "w") as writer:
+						writer.write(line_to_write)
+					break
+
+				if len(starter_token) == 0:
+					starter_token = read_line[:read_line.index(":")]
+				
+				line_to_write += read_line
+				if len(line_to_write) > self._mem_limit:
+					filename = "/"+starter_token + "-" +read_line[:read_line.index(":")] + ".txt"
+					with open(self._index_folder + filename, "w") as writer:
+						writer.write(line_to_write)
+					line_to_write = ""
+					starter_token = ""
+			
+		os.remove(self._index_folder + "/final-index.txt")
+				
 
 	def get_token_search(self, token) -> list:
 		"""
@@ -256,31 +280,75 @@ class IndexerBM25(Indexer):
 		self._index_folder = index_folder
 		self._k1 = k1
 		self._b = b
+		self._mem_limit = 8*1024*1024 #capping off at 8 MiB
+		self._avg_doc_len = 0
 
-	def indexing(self):
+	def _spimi_build(self):
 		"""
 		Index the tokens, by processing 1000 documents at a time,
 		tokenizing these coduments and then indexing all.
 		"""
-		doc_lens = {}
-		avg_doc_len = 0	
+		counter = 0
+		filename = self._index_folder + "/index-part-"
+
 		while True:
 			all_files, reached_end = self._corpus.process(1000)
+			self._index.clear()
+			counter += 1
+			
 			for doc_id, data in all_files.items():
 				token_list = self._tokenizer.tokenize(data)
-				doc_lens[doc_id] = len(token_list)
-				avg_doc_len += len(token_list)
+				self._avg_doc_len += len(token_list)
 				token_list = dict(Counter(token_list))
 				for token, freq in token_list.items():
 					self._index[token] = self._index.get(token, [])
-					self._index[token].append(TokenInfo(doc_id, freq))
+					self._index[token].append(TokenInfo(doc_id, freq, len(token_list)))
+
+			self.write(filename + str(counter) + ".txt")
 
 			if reached_end:
 				break
 
-		avg_doc_len /= self._corpus.number_of_read_docs
+		
+	def _calculate_weights(self):
+		"""
+		Rewrite the final index document to have the proper term weights with the BM25 algorithms
+		"""
 
-		for token in self._index:
-			for info in self._index[token]:
-				info.weight = self.get_token_freq(token) * (self._k1 + 1) * info.weight / \
-				(self._k1 * ((1 - self._b) + self._b * doc_lens[info.doc] / avg_doc_len) + info.weight)
+		self._avg_doc_len /= self._corpus.number_of_read_docs
+
+		onlyfiles = [self._index_folder + "/" + f for f in os.listdir(self._index_folder) if os.path.isfile(os.path.join(self._index_folder, f))][0]
+		merged_index_reader = open(onlyfiles, "r")
+		final_index_writer = open(self._index_folder + "/final-index.txt", "w")
+
+		while True:
+			term_line = merged_index_reader.readline()
+			
+			if term_line == "":
+				break
+
+			term_info = term_line.split(";")
+			term = term_info.pop(0)
+			
+			term_freq = log10(self._corpus.number_of_read_docs / len(term_info))
+			new_term_info = ""
+
+			for doc in term_info:
+				gen_doc_info, term_weight = doc.split(":")
+				doc_id, doc_len = gen_doc_info.split(",")
+				real_weight = term_freq*(self._k1 + 1) * float(term_weight) / \
+					(self._k1 * ((1 - self._b) + self._b * int(doc_len) / self._avg_doc_len) + float(term_weight))
+				new_term_info += f";{doc_id}:{real_weight:.2f}"
+
+			final_index_writer.write(f"{term}:{term_freq:.2f}" + new_term_info + "\n")
+
+		merged_index_reader.close()
+		os.remove(onlyfiles)
+		final_index_writer.close()
+
+		#avg_doc_len /= self._corpus.number_of_read_docs
+
+		#for token in self._index:
+		#	for info in self._index[token]:
+		#		info.weight = self.get_token_freq(token) * (self._k1 + 1) * info.weight / \
+		#		(self._k1 * ((1 - self._b) + self._b * doc_lens[info.doc] / avg_doc_len) + info.weight)
