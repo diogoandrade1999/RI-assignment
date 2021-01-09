@@ -201,9 +201,9 @@ def main(
     # read data file
     corpus = CorpusReader(data_file_path)
 
-    # read queries
-    query_reader = QueryReader(query_file_path, query_relevance_file_path)
- 
+    for f in os.listdir(file_to_write):
+        os.remove(os.path.join(file_to_write, f))
+
     # create tokenizer
     if not improved_tokenizer:
         tokenizer = SimpleTokenizer()
@@ -212,9 +212,9 @@ def main(
 
     # create indexer
     if use_bm:
-        indexer = IndexerBM25(corpus, tokenizer, bm_k1, bm_b)
+        indexer = IndexerBM25(corpus, tokenizer, file_to_write, bm_k1, bm_b)
     else:
-        indexer = Indexer(corpus, tokenizer)   
+        indexer = Indexer(corpus, tokenizer, file_to_write)   
 
     # start indexing
     start_time = time.time()
@@ -225,13 +225,17 @@ def main(
     # questions(indexer)
 
     # write index
+    """
     if file_to_write: 
         start_time = time.time()
         indexer.write(file_to_write)
-        logger.info("Writing Time: %s seconds" % (time.time() - start_time))   
+        logger.info("Writing Time: %s seconds" % (time.time() - start_time))""" 
 
     # metrics
-    print_metrics(metrics(query_reader, indexer, tokenizer, use_bm))
+    # read queries
+    if query_file_path and query_relevance_file_path:
+        query_reader = QueryReader(query_file_path, query_relevance_file_path)
+        print_metrics(metrics(query_reader, indexer, tokenizer, use_bm))
 
 
 if __name__ == "__main__":
@@ -246,12 +250,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", dest="data_file_path", required=True, help="Data file path")
     parser.add_argument("-t", dest="improved_tokenizer", required=False, help="Use improved tokenizer", default=False, action='store_true')
-    parser.add_argument("-w", dest="indexer_file", required=False, help="Write index to file", default=None)
+    parser.add_argument("-w", dest="indexer_file", required=False, help="Write index to folder", default="./index")
     parser.add_argument("-b", dest="bm25", required=False, help="Use the BM25 method to rank", default=False, action='store_true')
     parser.add_argument("--bk1", dest="bm25_k1_value", required=False, help="K value for the BM25 method", type=float, default=1.2)
     parser.add_argument("--bb", dest="bm25_b_value", required=False, help="B value for the BM25 method", type=float, default=0.75)  
-    parser.add_argument("-q", dest="query_file_path", required=True, help="Queries file path")
-    parser.add_argument("-qr", dest="query_relevance_file_path", required=True, help="Queries relevance file path")
+    parser.add_argument("-q", dest="query_file_path", required=False, help="Queries file path")
+    parser.add_argument("-qr", dest="query_relevance_file_path", required=False, help="Queries relevance file path")
     args = parser.parse_args()
 
     if not args.bm25 and (args.bm25_k1_value != 1.2 or args.bm25_b_value != 0.75):
