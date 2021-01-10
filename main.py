@@ -10,7 +10,7 @@ import os
 from math import log2
 
 from Tokenizer import Tokenizer, SimpleTokenizer, ImprovedTokenizer
-from Indexer import Indexer, IndexerBM25
+from Indexer import Indexer, IndexerTFIDF, IndexerBM25
 from CorpusReader import CorpusReader
 from QueryReader import QueryReader
 from Query import Query
@@ -192,11 +192,13 @@ def main(
     data_file_path:str,
     improved_tokenizer:bool,
     file_to_write:str,
+    space:int,
     use_bm:bool,
     bm_k1:float,
     bm_b:float,
     query_file_path:str,
-    query_relevance_file_path:str
+    query_relevance_file_path:str,
+    allow_position:bool
     ) -> None:
     # read data file
     corpus = CorpusReader(data_file_path)
@@ -212,9 +214,9 @@ def main(
 
     # create indexer
     if use_bm:
-        indexer = IndexerBM25(corpus, tokenizer, file_to_write, bm_k1, bm_b)
+        indexer = IndexerBM25(corpus, tokenizer, file_to_write, space, bm_k1, bm_b)
     else:
-        indexer = Indexer(corpus, tokenizer, file_to_write)   
+        indexer = IndexerTFIDF(corpus, tokenizer, file_to_write, space)   
 
     # start indexing
     start_time = time.time()
@@ -251,6 +253,8 @@ if __name__ == "__main__":
     parser.add_argument("-f", dest="data_file_path", required=True, help="Data file path")
     parser.add_argument("-t", dest="improved_tokenizer", required=False, help="Use improved tokenizer", default=False, action='store_true')
     parser.add_argument("-w", dest="indexer_file", required=False, help="Write index to folder", default="./index")
+    parser.add_argument("-s", dest="space", required=False, help="Value for how much RAM you want to use in MB (defaulted at 256MB)", type=int, default=256)
+    parser.add_argument("-p", dest="allow_position", required=False, help="Use if you want to allow for position queries", default=False, action='store_true')
     parser.add_argument("-b", dest="bm25", required=False, help="Use the BM25 method to rank", default=False, action='store_true')
     parser.add_argument("--bk1", dest="bm25_k1_value", required=False, help="K value for the BM25 method", type=float, default=1.2)
     parser.add_argument("--bb", dest="bm25_b_value", required=False, help="B value for the BM25 method", type=float, default=0.75)  
@@ -268,8 +272,10 @@ if __name__ == "__main__":
     main(args.data_file_path,
          args.improved_tokenizer,
          args.indexer_file, 
+         args.space,
          args.bm25,
          args.bm25_b_value,
          args.bm25_k1_value,
          args.query_file_path,
-         args.query_relevance_file_path)
+         args.query_relevance_file_path,
+         args.allow_position)

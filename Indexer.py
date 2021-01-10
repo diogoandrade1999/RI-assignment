@@ -1,35 +1,27 @@
 from collections import Counter
 from math import log10, sqrt
+import abc
 import os
+import sys
 
 from Tokenizer import Tokenizer
 from CorpusReader import CorpusReader
 from TokenInfo import TokenInfo
+import IndexUtils
 
-
-class Indexer:
+class Indexer(metaclass=abc.ABCMeta):
 	"""
-	Class used by index the tokens.
+	Abstract class for every Indexer that may be used
 
 	...
 
-	Attributes
-	----------
-	index : dict
-		The indexed tokens.
-
-	Methods
+	Abstract methods
 	-------
 	indexing()
-		Index the tokens.
-	get_token_search()
-		Search for the token on indexs.
-	get_token_freq()
-		Get the token fregquency.
-	write()
-		Write the indexs on file.
+		Start the indexing pipeline, composed of 4 methods that may be overwritten depending on the class.
+	
 	"""
-	def __init__(self, corpus:CorpusReader, tokenizer:Tokenizer, index_folder:str):
+	def __init__(self, corpus:CorpusReader, tokenizer:Tokenizer, index_folder:str, space:int):
 		"""
 		Parameters
 		----------
@@ -42,74 +34,20 @@ class Indexer:
 		self._tokenizer = tokenizer
 		self._index = {}
 		self._index_folder = index_folder
-		self._mem_limit = 8*1024*1024 #capping off at 8 MiB
-
-	@property
-	def index(self) -> dict:
-		return self._index
-
-	def indexing(self) -> None:
-		"""
-		Generic function that will build the index for the whole collection by calling the methods,
-		or steps on by one
-		"""
-		print("Start spimi algorithm")
-		self._spimi_build()
-
-		print("Start merging")
-		self._merge_docs()
-
-		print("Calculating Weights")
-		self._calculate_weights()
-		
-		print("Divide Documents")
-		self._divide_docs()
-		
+		self._mem_limit = space*1024*1024 
+		super().__init__()
 
 	def _spimi_build(self) -> None:
-		"""
-		Index the tokens, by processing 1000 documents at a time,
-		tokenizing these coduments and then indexing all.
-		"""
-		counter = 0
-		filename = self._index_folder + "/index-part-"
+		pass
 
-		while True:
-			all_files, reached_end = self._corpus.process(1000)
-			self._index.clear()
-			counter += 1
-
-			for doc_id, data in all_files.items():
-				token_list = self._tokenizer.tokenize(data)
-				token_list = dict(Counter(token_list))
-				doc_weight = 0
-				for token, freq in token_list.items():
-					tf = 1 + log10(freq)
-					self._index[token] = self._index.get(token, [])
-					self._index[token].append(TokenInfo(doc_id, freq))
-					doc_weight += tf ** 2
-				
-				for token in token_list:
-					self._index[token][-1].weight = self._index[token][-1].weight / sqrt(doc_weight)
-
-			self.write(filename + str(counter) + ".txt")
-
-			if reached_end:
-				break
-
-	def __parse_line(self, line:str) -> list:
-		list_of_terms =  line.rstrip().split(";")
-
-		return list_of_terms[0], ";".join(list_of_terms[1:])
-	
 	def _merge_docs(self) -> None:
 		"""
 		Merge the documents created by the indexer
 		"""
-		number_of_files = 5
 		line_by_reader = {}	
 		filename = self._index_folder + "/index-part-"
 		onlyfiles = [self._index_folder + "/" + f for f in os.listdir(self._index_folder) if os.path.isfile(os.path.join(self._index_folder, f))]
+		number_of_files = 5 if len(onlyfiles) > 5 else len(onlyfiles)
 		counter = len(onlyfiles)
 		while len(onlyfiles) > 1:
 			counter += 1
@@ -160,9 +98,189 @@ class Indexer:
 				writer.write(line_to_write + "\n")
 
 			writer.close()
-				
+
 			onlyfiles = [self._index_folder + "/" + f for f in os.listdir(self._index_folder) if os.path.isfile(os.path.join(self._index_folder, f))]
+		
+
+	def _calculate_weights(self) -> None:
+		pass
+
+	def _divide_docs(self) -> None:
+		"""
+		Final component of the index building pipeline where we divide the final index document in various,
+		smaller documents
+		"""
+		with open(self._index_folder + "/final-index.txt", "r") as index_reader:
+			line_to_write = ""
+			starter_token = ""
+			while True:
+				read_line = index_reader.readline()
+				if read_line == "":
+					filename = "/"+starter_token + ".txt"
+					with open(self._index_folder + filename, "w") as writer:
+						writer.write(line_to_write)
+					break
+
+				if len(starter_token) == 0:
+					starter_token = read_line[:read_line.index(":")]
+				
+				line_to_write += read_line
+				if sys.getsizeof(line_to_write) > self._mem_limit:
+					filename = "/"+starter_token + "-" +read_line[:read_line.index(":")] + ".txt"
+					with open(self._index_folder + filename, "w") as writer:
+						writer.write(line_to_write)
+					line_to_write = ""
+					starter_token = ""
 			
+		os.remove(self._index_folder + "/final-index.txt")
+	
+	def __parse_line(self, line:str) -> list:
+		separation_index = line.index(";")
+
+		return line[:separation_index], line[separation_index+1:-1]
+		
+
+	def write(self, file) -> None:
+		"""Write the indexs on file."""
+		with open(file, "w") as writer:
+			for token in sorted(self._index.keys()):
+				#line = "{}:{:.3f}".format(token, self.get_token_freq(token))
+				line = "{}".format(token)
+				for info in self._index[token]:
+					line += ";" + str(info)
+				writer.write(line + "\n")
+
+	def indexing(self) -> None:
+		"""
+		Generic function that will build the index for the whole collection by calling the methods,
+		or steps on by one
+		"""
+		print("Start spimi algorithm")
+		self._spimi_build()
+
+		print("Start merging")
+		self._merge_docs()
+
+		print("Calculating Weights")
+		self._calculate_weights()
+		
+		print("Divide Documents")
+		self._divide_docs()
+
+	def get_token_search(self, token) -> list:
+		"""
+		Search for the token on indexs.
+
+		Returns
+		-------
+		list
+			The token list.
+		"""
+		if token in self._index:
+			return self._index[token]
+		
+		self._import_index(self.get_index_file(token))
+		return self._index.get(token, [])
+
+	def _import_index(self, indexfile) -> None:
+		with open(self._index_folder + "/" + indexfile, "r") as indexreader:
+			while True:
+				token_line = indexreader.readline().rstrip()
+				if token_line == "":
+					return
+				token = token_line[:token_line.index(":")]
+				token_info = token_line[token_line.index(";")+1:].split(";")
+				self._index[token] = [IndexUtils.build_token(doc_info) for doc_info in token_info]
+			
+
+	def get_index_file(self, token) -> str:
+		all_indexes = os.listdir(self._index_folder)
+		for f in all_indexes:
+			ind = f[:f.index(".txt")]
+			if "-" not in ind:
+				if token >= ind: return f
+				continue
+			token_start, token_end = ind.split("-")
+			if token_start <= token <= token_end:
+				return f
+	
+	def get_token_freq(self, token) -> float:
+		"""
+		Search the written files of indexes for the word and gets the token weight
+
+		Returns
+		-------
+		float
+			the token weight
+		"""
+		selected_file = self.get_index_file(token)
+
+		with open(self._index_folder + "/" + selected_file	, "r") as r:
+			while True:
+				token_line = r.readline().rstrip()
+				if token_line == "":
+					return 0
+				indexed_token, token_freq = token_line[:token_line.index(";")].split(":")
+				if indexed_token == token:
+					return float(token_freq)
+
+class IndexerTFIDF(Indexer):
+	"""
+	Class used by index the tokens.
+
+	...
+
+	Attributes
+	----------
+	index : dict
+		The indexed tokens.
+
+	Methods
+	-------
+	indexing()
+		Index the tokens.
+	get_token_search()
+		Search for the token on indexs.
+	get_token_freq()
+		Get the token fregquency.
+	write()
+		Write the indexs on file.
+	"""
+	def _spimi_build(self) -> None:
+		"""
+		Index the tokens, by processing 1000 documents at a time,
+		tokenizing these coduments and then indexing all.
+		"""
+		counter = 0
+		filename = self._index_folder + "/index-part-"
+
+		while True:
+			all_files, reached_end = self._corpus.process(1000)
+			self._index.clear()
+			counter += 1
+
+			for doc_id, data in all_files.items():
+				token_list = self._tokenizer.tokenize(data)
+				token_list = dict(Counter(token_list))
+				doc_weight = 0
+				for token, freq in token_list.items():
+					tf = 1 + log10(freq)
+					self._index[token] = self._index.get(token, [])
+					self._index[token].append(TokenInfo(doc_id, freq))
+					doc_weight += tf ** 2
+				
+				for token in token_list:
+					self._index[token][-1].weight = self._index[token][-1].weight / sqrt(doc_weight)
+				
+				if sys.getsizeof(self._index) > self._mem_limit:
+					self.write(filename + str(counter) + ".txt")
+					self._index.clear()
+
+			self.write(filename + str(counter) + ".txt")
+
+			if reached_end:
+				break
+
 	def _calculate_weights(self) -> None:
 		"""
 		Rewrite the final index document to have the proper term weights according to the tf-idf
@@ -187,71 +305,6 @@ class Indexer:
 		merged_index_reader.close()
 		os.remove(onlyfiles)
 		final_index_writer.close()
-	
-	def _divide_docs(self) -> None:
-		"""
-		Final component of the index building pipeline where we divide the final index document in various,
-		smaller documents
-		"""
-		with open(self._index_folder + "/final-index.txt", "r") as index_reader:
-			line_to_write = ""
-			starter_token = ""
-			while True:
-				read_line = index_reader.readline()
-				if read_line == "":
-					filename = "/"+starter_token + ".txt"
-					with open(self._index_folder + filename, "w") as writer:
-						writer.write(line_to_write)
-					break
-
-				if len(starter_token) == 0:
-					starter_token = read_line[:read_line.index(":")]
-				
-				line_to_write += read_line
-				if len(line_to_write) > self._mem_limit:
-					filename = "/"+starter_token + "-" +read_line[:read_line.index(":")] + ".txt"
-					with open(self._index_folder + filename, "w") as writer:
-						writer.write(line_to_write)
-					line_to_write = ""
-					starter_token = ""
-			
-		os.remove(self._index_folder + "/final-index.txt")
-				
-
-	def get_token_search(self, token) -> list:
-		"""
-		Search for the token on indexs.
-
-		Returns
-		-------
-		list
-			The token list.
-		"""
-		return self._index.get(token, [])
-
-	def get_token_freq(self, token) -> float:
-		"""
-		Get the token frequency.
-
-		Returns
-		-------
-		float
-			The token frequency.
-		"""
-		if token not in self._index:
-			return 0
-
-		return log10(self._corpus.number_of_read_docs / len(self._index[token]))
-
-	def write(self, file) -> None:
-		"""Write the indexs on file."""
-		with open(file, "w") as writer:
-			for token in sorted(self._index.keys()):
-				#line = "{}:{:.3f}".format(token, self.get_token_freq(token))
-				line = "{}".format(token)
-				for info in self._index[token]:
-					line += ";" + str(info)
-				writer.write(line + "\n")
 
 
 class IndexerBM25(Indexer):
@@ -265,7 +318,7 @@ class IndexerBM25(Indexer):
 	indexing()
 		Index the tokens.
 	"""
-	def __init__(self, corpus:CorpusReader, tokenizer:Tokenizer, index_folder:str, k1:float, b:float):
+	def __init__(self, corpus:CorpusReader, tokenizer:Tokenizer, index_folder:str, space:int, k1:float, b:float):
 		"""
 		Parameters
 		----------
@@ -280,7 +333,7 @@ class IndexerBM25(Indexer):
 		self._index_folder = index_folder
 		self._k1 = k1
 		self._b = b
-		self._mem_limit = 8*1024*1024 #capping off at 8 MiB
+		self._mem_limit = space*1024*1024 #capping off at 8 MiB
 		self._avg_doc_len = 0
 
 	def _spimi_build(self):

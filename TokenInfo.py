@@ -26,6 +26,7 @@ class TokenInfo:
         self._doc = doc
         self._weight = doc_freq
         self._doc_len = doc_len
+        self._positions = []
 
     @property
     def doc(self):
@@ -55,12 +56,24 @@ class TokenInfo:
 
     def __repr__(self):
         if self._doc_len >0:
+            if len(self._positions) > 0:
+                return f"{self._doc},{self._doc_len}:{self._weight:.2f}{self._positions}"
+
             return f"{self._doc},{self._doc_len}:{self._weight:.2f}"
+
+        if len(self._positions) > 0:
+            return f"{self._doc}:{self._weight:.2f}{self._positions}"
 
         return f"{self._doc}:{self._weight:.2f}"
 
     def __str__(self):
         if self._doc_len >0:
+            if len(self._positions) > 0:
+                return f"{self._doc},{self._doc_len}:{self._weight:.2f}{self._positions}"
+
             return f"{self._doc},{self._doc_len}:{self._weight:.2f}"
-            
+
+        if len(self._positions) > 0:
+            return f"{self._doc}:{self._weight:.2f}{self._positions}"
+
         return f"{self._doc}:{self._weight:.2f}"
