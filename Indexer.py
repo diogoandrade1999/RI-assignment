@@ -1,6 +1,10 @@
+import os
+import sys
+import shutil
+import time
+
 from collections import Counter
 from math import log10, sqrt
-import os
 
 from Tokenizer import Tokenizer
 from CorpusReader import CorpusReader
@@ -53,6 +57,8 @@ class Indexer:
 		Generic function that will build the index for the whole collection by calling the methods,
 		or steps on by one
 		"""
+		self._create_index_directory()
+
 		print("Start spimi algorithm")
 		self._spimi_build()
 
@@ -64,7 +70,18 @@ class Indexer:
 		
 		print("Divide Documents")
 		self._divide_docs()
-		
+
+	def _create_index_directory(self) -> None:
+		if os.path.isdir(self._index_folder):
+			try:
+				shutil.rmtree(self._index_folder)
+			except OSError:
+				sys.exit("Deletion of the indexes files director failed!")
+		time.sleep(1)
+		try:
+			os.mkdir(self._index_folder)
+		except OSError:
+			sys.exit("Creation of the indexes files director failed!")
 
 	def _spimi_build(self) -> None:
 		"""
@@ -206,7 +223,7 @@ class Indexer:
 
 				if len(starter_token) == 0:
 					starter_token = read_line[:read_line.index(":")]
-				
+
 				line_to_write += read_line
 				if len(line_to_write) > self._mem_limit:
 					filename = "/"+starter_token + "-" +read_line[:read_line.index(":")] + ".txt"
@@ -214,9 +231,8 @@ class Indexer:
 						writer.write(line_to_write)
 					line_to_write = ""
 					starter_token = ""
-			
+
 		os.remove(self._index_folder + "/final-index.txt")
-				
 
 	def get_token_search(self, token) -> list:
 		"""
