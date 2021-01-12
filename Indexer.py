@@ -1,3 +1,8 @@
+import os
+import sys
+import shutil
+import time
+
 from collections import Counter
 from math import log10, sqrt
 import abc
@@ -36,6 +41,41 @@ class Indexer(metaclass=abc.ABCMeta):
 		self._index_folder = index_folder
 		self._mem_limit = space*1024*1024 
 		super().__init__()
+
+	@property
+	def index(self) -> dict:
+		return self._index
+
+	def indexing(self) -> None:
+		"""
+		Generic function that will build the index for the whole collection by calling the methods,
+		or steps on by one
+		"""
+		self._create_index_directory()
+
+		print("Start spimi algorithm")
+		self._spimi_build()
+
+		print("Start merging")
+		self._merge_docs()
+
+		print("Calculating Weights")
+		self._calculate_weights()
+		
+		print("Divide Documents")
+		self._divide_docs()
+
+	def _create_index_directory(self) -> None:
+		if os.path.isdir(self._index_folder):
+			try:
+				shutil.rmtree(self._index_folder)
+			except OSError:
+				sys.exit("Deletion of the indexes files director failed!")
+		time.sleep(1)
+		try:
+			os.mkdir(self._index_folder)
+		except OSError:
+			sys.exit("Creation of the indexes files director failed!")
 
 	def _spimi_build(self) -> None:
 		pass
@@ -123,7 +163,7 @@ class Indexer(metaclass=abc.ABCMeta):
 
 				if len(starter_token) == 0:
 					starter_token = read_line[:read_line.index(":")]
-				
+
 				line_to_write += read_line
 				if sys.getsizeof(line_to_write) > self._mem_limit:
 					filename = "/"+starter_token + "-" +read_line[:read_line.index(":")] + ".txt"
@@ -131,8 +171,9 @@ class Indexer(metaclass=abc.ABCMeta):
 						writer.write(line_to_write)
 					line_to_write = ""
 					starter_token = ""
-			
+
 		os.remove(self._index_folder + "/final-index.txt")
+<<<<<<< HEAD
 	
 	def __parse_line(self, line:str) -> list:
 		separation_index = line.index(";")
@@ -166,6 +207,8 @@ class Indexer(metaclass=abc.ABCMeta):
 		
 		print("Divide Documents")
 		self._divide_docs()
+=======
+>>>>>>> 524ba2398c681c8c65c7033f9530a508f6df193b
 
 	def get_token_search(self, token) -> list:
 		"""

@@ -203,9 +203,6 @@ def main(
     # read data file
     corpus = CorpusReader(data_file_path)
 
-    for f in os.listdir(file_to_write):
-        os.remove(os.path.join(file_to_write, f))
-
     # create tokenizer
     if not improved_tokenizer:
         tokenizer = SimpleTokenizer()
