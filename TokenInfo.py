@@ -12,7 +12,7 @@ class TokenInfo:
     weight : int
         The weight of that token.
     """
-    def __init__(self, doc, doc_freq, doc_len=0):
+    def __init__(self, doc, doc_freq, doc_len=0, positions=None):
         """
         Parameters
         ----------
@@ -26,7 +26,7 @@ class TokenInfo:
         self._doc = doc
         self._weight = doc_freq
         self._doc_len = doc_len
-        self._positions = []
+        self._positions = positions if positions else []
 
     @property
     def doc(self):
@@ -40,10 +40,18 @@ class TokenInfo:
     def doc_len(self):
         return self._doc_len
 
+    @property
+    def positions(self):
+        return self._positions
+
     @weight.setter
     def weight(self, new_weight):
         self._weight = new_weight
 
+    def add_position(self, index):
+        self._positions.append(index)
+        self._weight += 1
+    
     def __eq__(self, token):
         if token is None: return False
 

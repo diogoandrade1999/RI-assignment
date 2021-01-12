@@ -10,7 +10,7 @@ import os
 from math import log2
 
 from Tokenizer import Tokenizer, SimpleTokenizer, ImprovedTokenizer
-from Indexer import Indexer, IndexerTFIDF, IndexerBM25
+from Indexer import Indexer, IndexerTFIDF, IndexerBM25, IndexerTFIDFPositions, IndexerBM25Positions
 from CorpusReader import CorpusReader
 from QueryReader import QueryReader
 from Query import Query
@@ -214,9 +214,15 @@ def main(
 
     # create indexer
     if use_bm:
-        indexer = IndexerBM25(corpus, tokenizer, file_to_write, space, bm_k1, bm_b)
+        if allow_position:
+            indexer = IndexerBM25Positions(corpus, tokenizer, file_to_write, space, bm_k1, bm_b)
+        else:
+            indexer = IndexerBM25(corpus, tokenizer, file_to_write, space, bm_k1, bm_b)
     else:
-        indexer = IndexerTFIDF(corpus, tokenizer, file_to_write, space)   
+        if allow_position:
+            indexer = IndexerTFIDFPositions(corpus, tokenizer, file_to_write, space)
+        else:
+            indexer = IndexerTFIDF(corpus, tokenizer, file_to_write, space)   
 
     # start indexing
     start_time = time.time()
