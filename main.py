@@ -236,10 +236,11 @@ def main(
         indexer.write(file_to_write)
         logger.info("Writing Time: %s seconds" % (time.time() - start_time))""" 
 
-    # metrics
-    # read queries
     if query_file_path and query_relevance_file_path:
+        # read queries
         query_reader = QueryReader(query_file_path, query_relevance_file_path)
+
+        # metrics
         print_metrics(metrics(query_reader, indexer, tokenizer, use_bm))
 
 
