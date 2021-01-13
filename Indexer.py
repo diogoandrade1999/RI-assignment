@@ -173,7 +173,6 @@ class Indexer(metaclass=abc.ABCMeta):
 					starter_token = ""
 
 		os.remove(self._index_folder + "/final-index.txt")
-<<<<<<< HEAD
 	
 	def __parse_line(self, line:str) -> list:
 		separation_index = line.index(";")
@@ -207,8 +206,6 @@ class Indexer(metaclass=abc.ABCMeta):
 		
 		print("Divide Documents")
 		self._divide_docs()
-=======
->>>>>>> 524ba2398c681c8c65c7033f9530a508f6df193b
 
 	def get_token_search(self, token) -> list:
 		"""
