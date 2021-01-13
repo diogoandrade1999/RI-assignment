@@ -35,7 +35,7 @@ class TokenInfo:
     @property
     def weight(self):
         return self._weight
-    
+
     @property
     def doc_len(self):
         return self._doc_len
@@ -51,7 +51,7 @@ class TokenInfo:
     def add_position(self, index):
         self._positions.append(index)
         self._weight += 1
-    
+
     def __eq__(self, token):
         if token is None: return False
 
@@ -63,7 +63,7 @@ class TokenInfo:
         return hash(self._doc)
 
     def __repr__(self):
-        if self._doc_len >0:
+        if self._doc_len > 0:
             if len(self._positions) > 0:
                 return f"{self._doc},{self._doc_len}:{self._weight:.2f}{self._positions}"
 

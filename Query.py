@@ -48,9 +48,9 @@ class Query:
             weight = freq * self._index.get_token_freq(token)
             self._query_vector[token] = weight
             weight_total += weight ** 2
-            
+
         for token in self._query_vector:
-            self._query_vector[token] = weight / sqrt(weight_total)
+            self._query_vector[token] = self._query_vector[token] / sqrt(weight_total)
 
     def lookup_idf(self) -> list:
         """

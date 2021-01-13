@@ -2,17 +2,16 @@ import os
 import sys
 import shutil
 import time
+import abc
 
 from collections import Counter
 from math import log10, sqrt
-import abc
-import os
-import sys
 
 from Tokenizer import Tokenizer
 from CorpusReader import CorpusReader
 from TokenInfo import TokenInfo
 import IndexUtils
+
 
 class Indexer(metaclass=abc.ABCMeta):
 	"""
@@ -140,7 +139,6 @@ class Indexer(metaclass=abc.ABCMeta):
 			writer.close()
 
 			onlyfiles = [self._index_folder + "/" + f for f in os.listdir(self._index_folder) if os.path.isfile(os.path.join(self._index_folder, f))]
-		
 
 	def _calculate_weights(self) -> None:
 		pass
@@ -173,12 +171,11 @@ class Indexer(metaclass=abc.ABCMeta):
 					starter_token = ""
 
 		os.remove(self._index_folder + "/final-index.txt")
-	
+
 	def __parse_line(self, line:str) -> list:
 		separation_index = line.index(";")
 
 		return line[:separation_index], line[separation_index+1:-1]
-		
 
 	def write(self, file) -> None:
 		"""Write the indexs on file."""
@@ -189,23 +186,6 @@ class Indexer(metaclass=abc.ABCMeta):
 				for info in self._index[token]:
 					line += ";" + str(info)
 				writer.write(line + "\n")
-
-	def indexing(self) -> None:
-		"""
-		Generic function that will build the index for the whole collection by calling the methods,
-		or steps on by one
-		"""
-		print("Start spimi algorithm")
-		self._spimi_build()
-
-		print("Start merging")
-		self._merge_docs()
-
-		print("Calculating Weights")
-		self._calculate_weights()
-		
-		print("Divide Documents")
-		self._divide_docs()
 
 	def get_token_search(self, token) -> list:
 		"""
@@ -231,7 +211,6 @@ class Indexer(metaclass=abc.ABCMeta):
 				token = token_line[:token_line.index(":")]
 				token_info = token_line[token_line.index(";")+1:].split(";")
 				self._index[token] = [IndexUtils.build_token(doc_info) for doc_info in token_info]
-			
 
 	def get_index_file(self, token) -> str:
 		all_indexes = os.listdir(self._index_folder)
@@ -243,7 +222,7 @@ class Indexer(metaclass=abc.ABCMeta):
 			token_start, token_end = ind.split("-")
 			if token_start <= token <= token_end:
 				return f
-	
+
 	def get_token_freq(self, token) -> float:
 		"""
 		Search the written files of indexes for the word and gets the token weight
@@ -263,6 +242,7 @@ class Indexer(metaclass=abc.ABCMeta):
 				indexed_token, token_freq = token_line[:token_line.index(";")].split(":")
 				if indexed_token == token:
 					return float(token_freq)
+
 
 class IndexerTFIDF(Indexer):
 	"""
@@ -392,6 +372,7 @@ class IndexerTFIDFPositions(IndexerTFIDF):
 			if reached_end:
 				break
 
+
 class IndexerBM25(Indexer):
 	"""
 	Class used by index the tokens.
@@ -489,6 +470,7 @@ class IndexerBM25(Indexer):
 		#	for info in self._index[token]:
 		#		info.weight = self.get_token_freq(token) * (self._k1 + 1) * info.weight / \
 		#		(self._k1 * ((1 - self._b) + self._b * doc_lens[info.doc] / avg_doc_len) + info.weight)
+
 
 class IndexerBM25Positions(IndexerBM25):
 	def _spimi_build(self):

@@ -1,5 +1,6 @@
 from TokenInfo import TokenInfo
 
+
 def build_token(info:str) -> TokenInfo:
     doc, doc_weight = info.split(":")
     if "[" in doc_weight:
