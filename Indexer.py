@@ -243,6 +243,9 @@ class Indexer(metaclass=abc.ABCMeta):
 				if indexed_token == token:
 					return float(token_freq)
 
+	def __str__(self) -> str:
+		return 'INDEXER'
+
 
 class IndexerTFIDF(Indexer):
 	"""
@@ -326,6 +329,9 @@ class IndexerTFIDF(Indexer):
 		os.remove(onlyfiles)
 		final_index_writer.close()
 
+	def __str__(self) -> str:
+		return 'INDEXERTFIDF'
+
 
 class IndexerTFIDFPositions(IndexerTFIDF):
 	"""
@@ -371,6 +377,9 @@ class IndexerTFIDFPositions(IndexerTFIDF):
 
 			if reached_end:
 				break
+
+	def __str__(self) -> str:
+		return 'INDEXERTFIDFPOSITIONS'
 
 
 class IndexerBM25(Indexer):
@@ -471,6 +480,9 @@ class IndexerBM25(Indexer):
 		#		info.weight = self.get_token_freq(token) * (self._k1 + 1) * info.weight / \
 		#		(self._k1 * ((1 - self._b) + self._b * doc_lens[info.doc] / avg_doc_len) + info.weight)
 
+	def __str__(self) -> str:
+		return 'INDEXERBM25'
+
 
 class IndexerBM25Positions(IndexerBM25):
 	def _spimi_build(self):
@@ -537,3 +549,6 @@ class IndexerBM25Positions(IndexerBM25):
 		merged_index_reader.close()
 		os.remove(onlyfiles)
 		final_index_writer.close()
+
+	def __str__(self) -> str:
+		return 'INDEXERBM25POSITIONS'

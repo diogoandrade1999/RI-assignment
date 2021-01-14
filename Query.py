@@ -1,5 +1,6 @@
 from collections import Counter
 from math import sqrt
+from itertools import combinations
 
 from Tokenizer import Tokenizer
 from Indexer import Indexer
@@ -64,12 +65,27 @@ class Query:
         self.__process()
         prox_by_doc = {}
 
-        for token in self._query_vector:
-            for token_info in self._index.get_token_search(token):
-                doc = token_info.doc
-                if doc not in prox_by_doc:
-                    prox_by_doc[doc] = 0
-                prox_by_doc[doc] += self._query_vector[token] * token_info.weight
+        if 'POSITIONS' in str(self._index):
+            tokens_info = {}
+            for token in self._query_vector:
+                tokens_info[token] = {}
+                for token_info in self._index.get_token_search(token):
+                    tokens_info[token][token_info.doc] = (token_info.weight, token_info.positions)
+
+            docs_boost = self._boost(tokens_info)
+
+            for token in tokens_info:
+                for doc, (weight, positions) in tokens_info[token].items():
+                    if doc not in prox_by_doc:
+                        prox_by_doc[doc] = 0
+                    prox_by_doc[doc] += self._query_vector[token] * weight
+        else:
+            for token in self._query_vector:
+                for token_info in self._index.get_token_search(token):
+                    doc = token_info.doc
+                    if doc not in prox_by_doc:
+                        prox_by_doc[doc] = 0
+                    prox_by_doc[doc] += self._query_vector[token] * token_info.weight
 
         return sorted(prox_by_doc.items(), key=lambda t: t[1], reverse=True)
 
@@ -91,3 +107,25 @@ class Query:
                 prox_by_doc[doc] += token_info.weight
 
         return sorted(prox_by_doc.items(), key=lambda t: t[1], reverse=True)
+
+    def _boost(self, tokens_info, token_range=50):
+        docs_boost = {}
+        tokens = tokens_info.keys()
+        if len(tokens) > 1:
+            for (t1, t2) in combinations(tokens, 2):
+                docs = set(tokens_info[t1].keys()).intersection(set(tokens_info[t2].keys()))
+
+                for doc in docs:
+                    docs_boost[doc] = docs_boost.get(doc, 0)
+
+                    weight1 = tokens_info[t1][doc][0]
+                    positions1 = tokens_info[t1][doc][1]
+
+                    weight2 = tokens_info[t2][doc][0]
+                    positions2 = tokens_info[t2][doc][1]
+
+                    for p1 in positions1:
+                        for p2 in positions2:
+                            if p1 in range(p2, p2 + token_range) or p1 in range(p2 - token_range, p2):
+                                docs_boost[doc] += weight1 * weight2
+        return docs_boost
