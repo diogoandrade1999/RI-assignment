@@ -53,7 +53,7 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
     results = {}
     for query_number, query in query_reader.queries.items():
         results[query_number] = {}
-        
+
         start_time = time.time()
 
         query_search = Query(query, indexer, tokenizer)
@@ -107,14 +107,14 @@ def metrics(query_reader:QueryReader, indexer:Indexer, tokenizer:Tokenizer, use_
                     if i == 0: 
                         dcg = query_reader.get_rank_value(query_number, docs_retrieved_total[i])
                         continue
-                    dcg += query_reader.get_rank_value(query_number, docs_retrieved_total[i])/log2(k)
+                    dcg += query_reader.get_rank_value(query_number, docs_retrieved_total[i]) / log2(k)
 
                 average_precision = docs_precision / num_docs_relevance
 
                 perfect_rank = query_reader.get_perfect_dcg(query_number, num_docs_retrieved)
                 if perfect_rank != 0: 
-                    ndcg = dcg/query_reader.get_perfect_dcg(query_number, num_docs_retrieved)  
-            
+                    ndcg = dcg / query_reader.get_perfect_dcg(query_number, num_docs_retrieved)  
+
             results[query_number][num_docs_retrieved] = (precision, recall, f_measure, average_precision, ndcg)
     return results
 
@@ -184,7 +184,7 @@ def print_metrics(results:dict) -> None:
             f_measure1_total / 50, f_measure2_total / 50, f_measure3_total / 50,
             average_precision1_total / 50, average_precision2_total / 50, average_precision3_total / 50,
             ndcg1_total / 50, ndcg2_total / 50, ndcg3_total / 50,
-            latency_total[23] + latency_total[24]))
+            sum(latency_total) / len(latency_total)))
     logger.info('Query throughput: %9f', 50 / sum(latency_total))
 
 
@@ -228,13 +228,6 @@ def main(
 
     # assignment questions
     # questions(indexer)
-
-    # write index
-    """
-    if file_to_write: 
-        start_time = time.time()
-        indexer.write(file_to_write)
-        logger.info("Writing Time: %s seconds" % (time.time() - start_time))""" 
 
     if query_file_path and query_relevance_file_path:
         # read queries
