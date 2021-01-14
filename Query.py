@@ -99,12 +99,28 @@ class Query:
             The list of relevant tokens.
         """
         prox_by_doc = {}
-        for token in self._tokenizer.tokenize(self._query):
-            for token_info in self._index.get_token_search(token):
-                doc = token_info.doc
-                if doc not in prox_by_doc:
-                    prox_by_doc[doc] = 0
-                prox_by_doc[doc] += token_info.weight
+
+        if 'POSITIONS' in str(self._index):
+            tokens_info = {}
+            for token in self._tokenizer.tokenize(self._query):
+                tokens_info[token] = {}
+                for token_info in self._index.get_token_search(token):
+                    tokens_info[token][token_info.doc] = (token_info.weight, token_info.positions)
+
+            docs_boost = self._boost(tokens_info)
+
+            for token in tokens_info:
+                for doc, (weight, positions) in tokens_info[token].items():
+                    if doc not in prox_by_doc:
+                        prox_by_doc[doc] = 0
+                    prox_by_doc[doc] += weight
+        else:
+            for token in self._tokenizer.tokenize(self._query):
+                for token_info in self._index.get_token_search(token):
+                    doc = token_info.doc
+                    if doc not in prox_by_doc:
+                        prox_by_doc[doc] = 0
+                    prox_by_doc[doc] += token_info.weight
 
         return sorted(prox_by_doc.items(), key=lambda t: t[1], reverse=True)
 
