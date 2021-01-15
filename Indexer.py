@@ -37,6 +37,7 @@ class Indexer(metaclass=abc.ABCMeta):
 		self._corpus = corpus
 		self._tokenizer = tokenizer
 		self._index = {}
+		self._token_weights = {}
 		self._index_folder = index_folder
 		self._mem_limit = space*1024*1024 
 		super().__init__()
@@ -209,9 +210,10 @@ class Indexer(metaclass=abc.ABCMeta):
 				token_line = indexreader.readline().rstrip()
 				if token_line == "":
 					return
-				token = token_line[:token_line.index(":")]
+				token, token_weight = token_line[:token_line.index(";")].split(":")
 				token_info = token_line[token_line.index(";")+1:].split(";")
 				self._index[token] = [IndexUtils.build_token(doc_info) for doc_info in token_info]
+				self._token_weights[token] = float(token_weight)
 
 	def get_index_file(self, token) -> str:
 		all_indexes = os.listdir(self._index_folder)
@@ -233,16 +235,11 @@ class Indexer(metaclass=abc.ABCMeta):
 		float
 			the token weight
 		"""
-		selected_file = self.get_index_file(token)
-
-		with open(self._index_folder + "/" + selected_file	, "r") as r:
-			while True:
-				token_line = r.readline().rstrip()
-				if token_line == "":
-					return 0
-				indexed_token, token_freq = token_line[:token_line.index(";")].split(":")
-				if indexed_token == token:
-					return float(token_freq)
+		if token in self._token_weights:
+			return self._token_weights[token]
+		
+		self._import_index(self.get_index_file(token))
+		return self._token_weights.get(token, 0)
 
 	def __str__(self) -> str:
 		return 'INDEXER'
