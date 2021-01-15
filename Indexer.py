@@ -19,11 +19,38 @@ class Indexer(metaclass=abc.ABCMeta):
 
 	...
 
+	Attributes
+	----------
+	index : dict
+		The indexed tokens.
+
 	Abstract methods
 	-------
 	indexing()
 		Start the indexing pipeline, composed of 4 methods that may be overwritten depending on the class.
-	
+	_create_index_directory()
+		Create the index directory.
+	_spimi_build()
+		Index the tokens.
+	_merge_docs()
+		Merge the documents created by the indexer.
+	_calculate_weights()
+		Rewrite the final index document to have the proper term weights with the BM25 algorithms.
+	_divide_docs()
+		Final component of the index building pipeline where we divide the final index document in various,
+		smaller documents.
+	__parse_line()
+		Split token info.
+	write()
+		Write the indexs on file.
+	get_token_search()
+		Search for the token on indexs.
+	_import_index()
+		Import indexes of file.
+	get_index_file()
+		Get the file name of indexes.
+	get_token_freq()
+		Get the token fregquency.
 	"""
 	def __init__(self, corpus:CorpusReader, tokenizer:Tokenizer, index_folder:str, space:int):
 		"""
@@ -49,7 +76,7 @@ class Indexer(metaclass=abc.ABCMeta):
 	def indexing(self) -> None:
 		"""
 		Generic function that will build the index for the whole collection by calling the methods,
-		or steps on by one
+		or steps on by one.
 		"""
 		self._create_index_directory()
 
@@ -61,11 +88,12 @@ class Indexer(metaclass=abc.ABCMeta):
 
 		print("Calculating Weights")
 		self._calculate_weights()
-		
+
 		print("Divide Documents")
 		self._divide_docs()
 
 	def _create_index_directory(self) -> None:
+		"""Create the index directory."""
 		if os.path.isdir(self._index_folder):
 			try:
 				shutil.rmtree(self._index_folder)
@@ -78,11 +106,15 @@ class Indexer(metaclass=abc.ABCMeta):
 			sys.exit("Creation of the indexes files director failed!")
 
 	def _spimi_build(self) -> None:
+		"""
+		Index the tokens, by processing 1000 documents at a time,
+		tokenizing these coduments and then indexing all.
+		"""
 		pass
 
 	def _merge_docs(self) -> None:
 		"""
-		Merge the documents created by the indexer
+		Merge the documents created by the indexer.
 		"""
 		line_by_reader = {}	
 		filename = self._index_folder + "/index-part-"
@@ -94,11 +126,11 @@ class Indexer(metaclass=abc.ABCMeta):
 
 			# open writer pointers
 			writer = open(filename + str(counter) + ".txt", "w")
-			
+
 			# open reader pointers
 			for reader in onlyfiles[:number_of_files]:
 				line_by_reader[reader] = [open(reader, "r"), "", "", True]
-			
+
 			while True:
 				# advance needed pointers
 				to_close = []
@@ -119,14 +151,14 @@ class Indexer(metaclass=abc.ABCMeta):
 						line_by_reader[line][0].close()
 						os.remove(line)
 						line_by_reader.pop(line)
-				
+
 				# End condition is there are no open readers in the dictionary
 				if len(line_by_reader) == 0: 
 					break
 
 				#Get smallest token
 				smallest_token = min([line_by_reader[reader][1] for reader in line_by_reader])
-	
+
 				#Start building merged line
 				line_to_write = smallest_token
 
@@ -134,7 +166,7 @@ class Indexer(metaclass=abc.ABCMeta):
 					if line_by_reader[reader][1] == smallest_token:
 						line_by_reader[reader][-1] = True
 						line_to_write += ";" + line_by_reader[reader][2]
-				
+
 				writer.write(line_to_write + "\n")
 
 			writer.close()
@@ -143,12 +175,15 @@ class Indexer(metaclass=abc.ABCMeta):
 			number_of_files = 5 if len(onlyfiles) > 5 else len(onlyfiles)
 
 	def _calculate_weights(self) -> None:
+		"""
+		Rewrite the final index document to have the proper term weights according to the tf-idf.
+		"""
 		pass
 
 	def _divide_docs(self) -> None:
 		"""
 		Final component of the index building pipeline where we divide the final index document in various,
-		smaller documents
+		smaller documents.
 		"""
 		with open(self._index_folder + "/final-index.txt", "r") as index_reader:
 			line_to_write = ""
@@ -174,13 +209,33 @@ class Indexer(metaclass=abc.ABCMeta):
 
 		os.remove(self._index_folder + "/final-index.txt")
 
-	def __parse_line(self, line:str) -> list:
+	def __parse_line(self, line:str) -> tuple:
+		"""
+		Split token info.
+
+		Parameters
+		----------
+		line : str
+			The token info.
+
+		Returns
+		-------
+		tuple
+			The split token info.
+		"""
 		separation_index = line.index(";")
 
 		return line[:separation_index], line[separation_index+1:-1]
 
-	def write(self, file) -> None:
-		"""Write the indexs on file."""
+	def write(self, file:str) -> None:
+		"""
+		Write the indexs on file.
+
+		Parameters
+		----------
+		file : str
+			The file name.
+		"""
 		with open(file, "w") as writer:
 			for token in sorted(self._index.keys()):
 				#line = "{}:{:.3f}".format(token, self.get_token_freq(token))
@@ -189,9 +244,14 @@ class Indexer(metaclass=abc.ABCMeta):
 					line += ";" + str(info)
 				writer.write(line + "\n")
 
-	def get_token_search(self, token) -> list:
+	def get_token_search(self, token:str) -> list:
 		"""
 		Search for the token on indexs.
+
+		Parameters
+		----------
+		token : str
+			The token id.
 
 		Returns
 		-------
@@ -200,11 +260,19 @@ class Indexer(metaclass=abc.ABCMeta):
 		"""
 		if token in self._index:
 			return self._index[token]
-		
+
 		self._import_index(self.get_index_file(token))
 		return self._index.get(token, [])
 
-	def _import_index(self, indexfile) -> None:
+	def _import_index(self, indexfile:str) -> None:
+		"""
+		Import indexes of file.
+
+		Parameters
+		----------
+		indexfile : str
+			The file name.
+		"""
 		with open(self._index_folder + "/" + indexfile, "r") as indexreader:
 			while True:
 				token_line = indexreader.readline().rstrip()
@@ -215,7 +283,20 @@ class Indexer(metaclass=abc.ABCMeta):
 				self._index[token] = [IndexUtils.build_token(doc_info) for doc_info in token_info]
 				self._token_weights[token] = float(token_weight)
 
-	def get_index_file(self, token) -> str:
+	def get_index_file(self, token:str) -> str:
+		"""
+		Get the file name of indexes.
+
+		Parameters
+		----------
+		token : str
+			The token id.
+
+		Returns
+		-------
+		str
+			The file name.
+		"""
 		all_indexes = os.listdir(self._index_folder)
 		for f in all_indexes:
 			ind = f[:f.index(".txt")]
@@ -226,18 +307,23 @@ class Indexer(metaclass=abc.ABCMeta):
 			if token_start <= token <= token_end:
 				return f
 
-	def get_token_freq(self, token) -> float:
+	def get_token_freq(self, token:str) -> float:
 		"""
-		Search the written files of indexes for the word and gets the token weight
+		Search the written files of indexes for the word and gets the token weight.
+
+		Parameters
+		----------
+		token : str
+			The token id.
 
 		Returns
 		-------
 		float
-			the token weight
+			The token weight.
 		"""
 		if token in self._token_weights:
 			return self._token_weights[token]
-		
+
 		self._import_index(self.get_index_file(token))
 		return self._token_weights.get(token, 0)
 
@@ -251,21 +337,12 @@ class IndexerTFIDF(Indexer):
 
 	...
 
-	Attributes
-	----------
-	index : dict
-		The indexed tokens.
-
 	Methods
 	-------
-	indexing()
+	_spimi_build()
 		Index the tokens.
-	get_token_search()
-		Search for the token on indexs.
-	get_token_freq()
-		Get the token fregquency.
-	write()
-		Write the indexs on file.
+	_calculate_weights()
+		Rewrite the final index document to have the proper term weights with the BM25 algorithms.
 	"""
 	def _spimi_build(self) -> None:
 		"""
@@ -289,10 +366,10 @@ class IndexerTFIDF(Indexer):
 					self._index[token] = self._index.get(token, [])
 					self._index[token].append(TokenInfo(doc_id, freq))
 					doc_weight += tf ** 2
-				
+
 				for token in token_list:
 					self._index[token][-1].weight = self._index[token][-1].weight / sqrt(doc_weight)
-				
+
 				if sys.getsizeof(self._index) > self._mem_limit:
 					self.write(filename + str(counter) + ".txt")
 					self._index.clear()
@@ -304,7 +381,7 @@ class IndexerTFIDF(Indexer):
 
 	def _calculate_weights(self) -> None:
 		"""
-		Rewrite the final index document to have the proper term weights according to the tf-idf
+		Rewrite the final index document to have the proper term weights according to the tf-idf.
 		"""
 		onlyfiles = [self._index_folder + "/" + f for f in os.listdir(self._index_folder) if os.path.isfile(os.path.join(self._index_folder, f))][0]
 		merged_index_reader = open(onlyfiles, "r")
@@ -312,13 +389,13 @@ class IndexerTFIDF(Indexer):
 
 		while True:
 			term_line = merged_index_reader.readline()
-			
+
 			if term_line == "":
 				break
 
 			term_info = term_line.split(";")
 			term = term_info.pop(0)
-			
+
 			term_freq = log10(self._corpus.number_of_read_docs / len(term_info))
 
 			final_index_writer.write(f"{term}:{term_freq:.2f};" + ";".join(term_info))
@@ -336,6 +413,13 @@ class IndexerTFIDFPositions(IndexerTFIDF):
 	Subclass of the TF IDF indexer that allows for positioning
 	Functionally the same, but now has to save the positions when building the query and allow for the 
 	positional queries
+
+	...
+
+	Methods
+	-------
+	_spimi_build()
+		Index the tokens.
 	"""
 	def _spimi_build(self) -> None:
 		"""
@@ -359,14 +443,14 @@ class IndexerTFIDFPositions(IndexerTFIDF):
 					if len(self._index[token]) == 0 or self._index[token][-1].doc != doc_id:
 						self._index[token].append(TokenInfo(doc_id, 0))
 					self._index[token][-1].add_position(i)
-				
+
 				token_list = set(token_list)
 				for token in token_list:
 					doc_weight += (1 + log10(self._index[token][-1].weight))**2
-				
+
 				for token in token_list:
 					self._index[token][-1].weight /= sqrt(doc_weight) 
-				
+
 				if sys.getsizeof(self._index) > self._mem_limit:
 					self.write(filename + str(counter) + ".txt")
 					self._index.clear()
@@ -388,8 +472,10 @@ class IndexerBM25(Indexer):
 
 	Methods
 	-------
-	indexing()
+	_spimi_build()
 		Index the tokens.
+	_calculate_weights()
+		Rewrite the final index document to have the proper term weights with the BM25 algorithms.
 	"""
 	def __init__(self, corpus:CorpusReader, tokenizer:Tokenizer, index_folder:str, space:int, k1:float, b:float):
 		"""
@@ -409,7 +495,7 @@ class IndexerBM25(Indexer):
 		self._mem_limit = space*1024*1024 #capping off at 8 MiB
 		self._avg_doc_len = 0
 
-	def _spimi_build(self):
+	def _spimi_build(self) -> None:
 		"""
 		Index the tokens, by processing 1000 documents at a time,
 		tokenizing these coduments and then indexing all.
@@ -421,7 +507,7 @@ class IndexerBM25(Indexer):
 			all_files, reached_end = self._corpus.process(1000)
 			self._index.clear()
 			counter += 1
-			
+
 			for doc_id, data in all_files.items():
 				token_list = self._tokenizer.tokenize(data)
 				self._avg_doc_len += len(token_list)
@@ -434,12 +520,11 @@ class IndexerBM25(Indexer):
 
 			if reached_end:
 				break
-	
-	def _calculate_weights(self):
-		"""
-		Rewrite the final index document to have the proper term weights with the BM25 algorithms
-		"""
 
+	def _calculate_weights(self) -> None:
+		"""
+		Rewrite the final index document to have the proper term weights with the BM25 algorithms.
+		"""
 		self._avg_doc_len /= self._corpus.number_of_read_docs
 
 		onlyfiles = [self._index_folder + "/" + f for f in os.listdir(self._index_folder) if os.path.isfile(os.path.join(self._index_folder, f))][0]
@@ -448,13 +533,13 @@ class IndexerBM25(Indexer):
 
 		while True:
 			term_line = merged_index_reader.readline()
-			
+
 			if term_line == "":
 				break
 
 			term_info = term_line.split(";")
 			term = term_info.pop(0)
-			
+
 			term_freq = log10(self._corpus.number_of_read_docs / len(term_info))
 			new_term_info = ""
 
@@ -483,7 +568,21 @@ class IndexerBM25(Indexer):
 
 
 class IndexerBM25Positions(IndexerBM25):
-	def _spimi_build(self):
+	"""
+	Subclass of the BM25 indexer that allows for positioning
+	Functionally the same, but now has to save the positions when building the query and allow for the 
+	positional queries
+
+	...
+
+	Methods
+	-------
+	_spimi_build()
+		Index the tokens.
+	_calculate_weights()
+		Rewrite the final index document to have the proper term weights with the BM25 algorithms.
+	"""
+	def _spimi_build(self) -> None:
 		"""
 		Index the tokens, by processing 1000 documents at a time,
 		tokenizing these coduments and then indexing all with positions.
@@ -495,7 +594,7 @@ class IndexerBM25Positions(IndexerBM25):
 			all_files, reached_end = self._corpus.process(1000)
 			self._index.clear()
 			counter += 1
-			
+
 			for doc_id, data in all_files.items():
 				token_list = self._tokenizer.tokenize(data)
 				self._avg_doc_len += len(set(token_list))
@@ -510,12 +609,11 @@ class IndexerBM25Positions(IndexerBM25):
 
 			if reached_end:
 				break
-	
-	def _calculate_weights(self):
-		"""
-		Rewrite the final index document to have the proper term weights with the BM25 algorithms
-		"""
 
+	def _calculate_weights(self) -> None:
+		"""
+		Rewrite the final index document to have the proper term weights with the BM25 algorithms.
+		"""
 		self._avg_doc_len /= self._corpus.number_of_read_docs
 
 		onlyfiles = [self._index_folder + "/" + f for f in os.listdir(self._index_folder) if os.path.isfile(os.path.join(self._index_folder, f))][0]
@@ -524,13 +622,13 @@ class IndexerBM25Positions(IndexerBM25):
 
 		while True:
 			term_line = merged_index_reader.readline()
-			
+
 			if term_line == "":
 				break
 
 			term_info = term_line.split(";")
 			term = term_info.pop(0)
-			
+
 			term_freq = log10(self._corpus.number_of_read_docs / len(term_info))
 			new_term_info = ""
 

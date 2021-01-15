@@ -44,16 +44,12 @@ class SimpleTokenizer(Tokenizer):
 		# ! remove duplicated tokens
 		return [token for token in tokens.split() if len(token) >= 3]
 
+
 class ImprovedTokenizer(Tokenizer):
 	"""
 	Class used by tokenize the data with a improved tokenizer.
 
 	...
-
-	Attributes
-	----------
-	stemmer : SnowballStemmer
-		The stemmer object.
 
 	Methods
 	-------

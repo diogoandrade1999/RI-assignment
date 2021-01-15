@@ -9,46 +9,52 @@ class TokenInfo:
     ----------
     doc : str
         The document id.
-    weight : int
+    weight : float
         The weight of that token.
+    doc_len : int
+        The number of tokens in the document.
+    positions : list
+        The token positions inside the file.
     """
-    def __init__(self, doc, doc_freq, doc_len=0, positions=None):
+    def __init__(self, doc:str, weight:float, doc_len:int=0, positions:list=None):
         """
         Parameters
         ----------
-        doc: str
+        doc : str
             The document id.
-        doc_freq : int
-            The number of times we find that token on document.
+        weight : float
+            The weight of that token.
         doc_len : int
             The number of tokens in the document.
+        positions : list
+            The token positions inside the file.
         """
         self._doc = doc
-        self._weight = doc_freq
+        self._weight = weight
         self._doc_len = doc_len
         self._positions = positions if positions else []
 
     @property
-    def doc(self):
+    def doc(self) -> str:
         return self._doc
 
     @property
-    def weight(self):
+    def weight(self) -> float:
         return self._weight
 
     @property
-    def doc_len(self):
+    def doc_len(self) -> int:
         return self._doc_len
 
     @property
-    def positions(self):
+    def positions(self) -> list:
         return self._positions
 
     @weight.setter
-    def weight(self, new_weight):
+    def weight(self, new_weight:float) -> None:
         self._weight = new_weight
 
-    def add_position(self, index):
+    def add_position(self, index:int) -> None:
         self._positions.append(index)
         self._weight += 1
 
@@ -75,7 +81,7 @@ class TokenInfo:
         return f"{self._doc}:{self._weight:.2f}"
 
     def __str__(self):
-        if self._doc_len >0:
+        if self._doc_len > 0:
             if len(self._positions) > 0:
                 return f"{self._doc},{self._doc_len}:{self._weight:.2f}:{','.join([str(p) for p in self._positions])}"
 

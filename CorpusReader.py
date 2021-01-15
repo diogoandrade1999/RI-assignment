@@ -34,12 +34,17 @@ class CorpusReader:
 		self._number_of_read_docs = 0
 
 	@property
-	def number_of_read_docs(self):
+	def number_of_read_docs(self) -> int:
 		return self._number_of_read_docs
 
-	def process(self, number_of_files_to_read) -> tuple:
+	def process(self, number_of_files_to_read:int) -> tuple:
 		"""
 		Process the data file.
+
+		Parameters
+		----------
+		number_of_files_to_read : int
+			The number of files to read.
 
 		Returns
 		-------

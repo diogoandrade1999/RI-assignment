@@ -20,6 +20,8 @@ class Query:
         Search the tokens relevant for the query. Using idf.
     lookup_bm25()
         Search the tokens relevant for the query. Using bm25.
+    _boost()
+        Boost the docs by tokens query position.
     """
     def __init__(self, query:str, index:Indexer, tokenizer:Tokenizer):
         """
@@ -124,7 +126,22 @@ class Query:
 
         return sorted(prox_by_doc.items(), key=lambda t: t[1], reverse=True)
 
-    def _boost(self, tokens_info, token_range=50):
+    def _boost(self, tokens_info:dict, token_range:int=50) -> dict:
+        """
+        Boost the docs by tokens query position.
+
+        Parameters
+        ----------
+        tokens_info : dict
+            The docs with query tokens.
+        token_range : int
+            The distance between the query tokens.
+
+        Returns
+        -------
+        dict
+            The docs and boost value.
+        """
         docs_boost = {}
         tokens = tokens_info.keys()
         if len(tokens) > 1:

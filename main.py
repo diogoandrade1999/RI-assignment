@@ -245,13 +245,15 @@ if __name__ == "__main__":
         python3 main.py -f data.csv -q queries.txt -qr queries.relevance.filtered.txt
     improved tokenizer:
         python3 main.py -f data.csv -t -q queries.txt -qr queries.relevance.filtered.txt
+    to use bm25 active flag: -b
+    to use boost active flag: -p
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", dest="data_file_path", required=True, help="Data file path")
     parser.add_argument("-t", dest="improved_tokenizer", required=False, help="Use improved tokenizer", default=False, action='store_true')
     parser.add_argument("-w", dest="indexer_file", required=False, help="Write index to folder", default="./index")
     parser.add_argument("-s", dest="space", required=False, help="Value for how much RAM you want to use in MB (defaulted at 256MB)", type=int, default=256)
-    parser.add_argument("-p", dest="allow_position", required=False, help="Use if you want to allow for position queries", default=False, action='store_true')
+    parser.add_argument("-p", dest="allow_position", required=False, help="Use if you want to allow for position queries (using query boost)", default=False, action='store_true')
     parser.add_argument("-b", dest="bm25", required=False, help="Use the BM25 method to rank", default=False, action='store_true')
     parser.add_argument("--bk1", dest="bm25_k1_value", required=False, help="K value for the BM25 method", type=float, default=1.2)
     parser.add_argument("--bb", dest="bm25_b_value", required=False, help="B value for the BM25 method", type=float, default=0.75)  

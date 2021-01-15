@@ -28,7 +28,7 @@ class QueryReader:
     get_rank_value()
         Get the doc rank value on query.
     """
-    def __init__(self, query_file_path:str, query_relevance_file_path):
+    def __init__(self, query_file_path:str, query_relevance_file_path:str):
         """
         Parameters
         ----------
@@ -67,7 +67,7 @@ class QueryReader:
             for query_id, query in enumerate(queries, start=1):
                 self._queries[str(query_id)] = query.rstrip()
 
-    def _read_queries_relevance(self):
+    def _read_queries_relevance(self) -> None:
         """Read the file with the list of relevant queries."""
         self._queries_relevance = {}
         with open(self._query_relevance_file_path, "r") as queries:
@@ -76,9 +76,16 @@ class QueryReader:
                 self._queries_relevance[query_id] = self._queries_relevance.get(query_id, {0: set(), 1: set(), 2: set()})
                 self._queries_relevance[query_id][int(relevance)].add(cord_ui)
 
-    def get_perfect_dcg(self, query_id, num_docs) -> float:
+    def get_perfect_dcg(self, query_id:int, num_docs:int) -> float:
         """
         Get the perfect dcg.
+
+        Parameters
+        ----------
+        query_id : int
+            The query id.
+        num_docs : int
+            The number of docs.
 
         Returns
         -------
@@ -98,9 +105,16 @@ class QueryReader:
                 if num_sums == num_docs: return perfect_rank
         return perfect_rank
 
-    def get_rank_value(self, query_id, doc) -> int:
+    def get_rank_value(self, query_id:int, doc:str) -> int:
         """
         Get the doc rank value on query.
+
+        Parameters
+        ----------
+        query_id : int
+            The query id.
+        doc : str
+            The document id.
 
         Returns
         -------
