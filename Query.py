@@ -72,7 +72,7 @@ class Query:
                 for token_info in self._index.get_token_search(token):
                     tokens_info[token][token_info.doc] = (token_info.weight, token_info.positions)
 
-            docs_boost = self._boost(tokens_info)
+            prox_by_doc = self._boost(tokens_info)
 
             for token in tokens_info:
                 for doc, (weight, positions) in tokens_info[token].items():
@@ -107,7 +107,7 @@ class Query:
                 for token_info in self._index.get_token_search(token):
                     tokens_info[token][token_info.doc] = (token_info.weight, token_info.positions)
 
-            docs_boost = self._boost(tokens_info)
+            prox_by_doc = self._boost(tokens_info)
 
             for token in tokens_info:
                 for doc, (weight, positions) in tokens_info[token].items():
