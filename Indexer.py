@@ -494,6 +494,7 @@ class IndexerBM25(Indexer):
 		self._b = b
 		self._mem_limit = space*1024*1024 #capping off at 8 MiB
 		self._avg_doc_len = 0
+		self._token_weights = {}
 
 	def _spimi_build(self) -> None:
 		"""
