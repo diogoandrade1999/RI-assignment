@@ -142,6 +142,6 @@ class Query:
 
                     for p1 in positions1:
                         for p2 in positions2:
-                            if p1 in range(p2, p2 + token_range) or p1 in range(p2 - token_range, p2):
+                            if p1 in range(p2 - token_range, p2 + token_range):
                                 docs_boost[doc] += weight1 * weight2
         return docs_boost

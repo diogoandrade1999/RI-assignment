@@ -139,6 +139,7 @@ class Indexer(metaclass=abc.ABCMeta):
 			writer.close()
 
 			onlyfiles = [self._index_folder + "/" + f for f in os.listdir(self._index_folder) if os.path.isfile(os.path.join(self._index_folder, f))]
+			number_of_files = 5 if len(onlyfiles) > 5 else len(onlyfiles)
 
 	def _calculate_weights(self) -> None:
 		pass
@@ -537,12 +538,11 @@ class IndexerBM25Positions(IndexerBM25):
 			new_term_info = ""
 
 			for doc in term_info:
-				gen_doc_info, term_info = doc.split(":")
-				term_weight, term_list = term_info.rstrip().split("[")
+				gen_doc_info, term_weight, term_list = doc.rstrip().split(":")
 				doc_id, doc_len = gen_doc_info.split(",")
 				real_weight = term_freq*(self._k1 + 1) * float(term_weight) / \
 					(self._k1 * ((1 - self._b) + self._b * int(doc_len) / self._avg_doc_len) + float(term_weight))
-				new_term_info += f";{doc_id}:{real_weight:.2f}[{term_list}"
+				new_term_info += f";{doc_id}:{real_weight:.2f}:{term_list}"
 
 			final_index_writer.write(f"{term}:{term_freq:.3f}" + new_term_info + "\n")
 
